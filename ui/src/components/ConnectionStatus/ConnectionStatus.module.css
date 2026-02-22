@@ -1,0 +1,28 @@
+.status {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  color: var(--ds-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.connected {
+  background: var(--ds-green);
+}
+
+.disconnected {
+  background: var(--ds-red);
+}
+
+.connecting {
+  background: var(--ds-amber);
+  animation: ds-pulse-small 2s infinite;
+}

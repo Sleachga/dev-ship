@@ -1,0 +1,35 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar {
+  width: 80px;
+  height: 6px;
+  background: var(--ds-border);
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.active {
+  background: var(--ds-amber);
+}
+
+.done {
+  background: var(--ds-green);
+}
+
+.label {
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+  color: var(--ds-text-dim);
+}

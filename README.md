@@ -71,6 +71,19 @@ Each feature creates a `.ship/` directory in your project:
 
 `.ship/` is automatically added to `.gitignore`.
 
+## Development
+
+The `ui/` directory contains a React + TypeScript component library with Storybook, extracted from the dashboard's visual components.
+
+```bash
+cd ui
+npm install
+npm run storybook    # Opens Storybook at localhost:6006
+npm run typecheck    # TypeScript type checking
+```
+
+The component library is separate from the plugin runtime — it has its own `node_modules` and doesn't affect the plugin's zero-dependency nature.
+
 ## Uninstall
 
 ```

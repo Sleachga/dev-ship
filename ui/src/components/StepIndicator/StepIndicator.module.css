@@ -1,0 +1,60 @@
+.container {
+  padding: 16px;
+  background: var(--ds-bg-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: 8px;
+  font-family: var(--ds-font-mono);
+}
+
+.heading {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ds-text-dim);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.substeps {
+  display: flex;
+  gap: 24px;
+}
+
+.substep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ds-text-dim);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ds-border);
+  flex-shrink: 0;
+}
+
+.substepDone .dot {
+  background: var(--ds-green);
+}
+
+.substepDone {
+  color: var(--ds-green);
+}
+
+.substepActive .dot {
+  background: var(--ds-amber);
+  animation: ds-pulse-small 2s infinite;
+}
+
+.substepActive {
+  color: var(--ds-amber);
+  font-weight: 600;
+}
+
+.complete {
+  color: var(--ds-green);
+  font-size: 13px;
+}

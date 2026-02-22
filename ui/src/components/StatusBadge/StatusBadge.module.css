@@ -1,0 +1,22 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ds-font-mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.active {
+  color: var(--ds-amber);
+  border-color: var(--ds-amber-dim);
+  background: rgba(210, 153, 34, 0.1);
+}
+
+.complete {
+  color: var(--ds-green);
+  border-color: var(--ds-green-dim);
+  background: rgba(63, 185, 80, 0.1);
+}

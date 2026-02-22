@@ -1,2 +1,5 @@
 node_modules/
 .ship/
+ui/node_modules/
+ui/storybook-static/
+ui/dist/
