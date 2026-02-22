@@ -52,6 +52,7 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
    - **Started**: {current date}
    - **Ticket**: {TICKET or "none"}
    - **Step**: research
+   - **Phases**: 0/? complete
    - **Status**: in-progress
    ```
 
@@ -127,7 +128,7 @@ Tell the user: "Research complete — findings written to RESEARCH.md. Next up: 
 5. Present the plan to the user. Use AskUserQuestion: "Does this plan look good? Any changes before I start Phase 1?"
 6. Wait for approval before proceeding.
 
-**Update META.md step to `phase-1:context`.**
+**Update META.md: step to `phase-1:context`, phases to `0/{total} complete`** (now that we know the total from the plan).
 
 Tell the user: "Plan approved. Next up: I'll ask a few implementation questions for Phase 1, then start coding."
 
@@ -195,12 +196,12 @@ Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
 ```
 
 If there are more phases:
-- **Update META.md step to `phase-{N+1}:context`.**
-- Tell the user: "Phase {N} complete! {completed}/{total} phases done. Next up: Phase {N+1} — {next phase name}. Ready to continue?"
+- **Update META.md: step to `phase-{N+1}:context`, phases to `{N}/{total} complete`.**
+- Tell the user: "Phase {N} complete! {N}/{total} phases done. Next up: Phase {N+1} — {next phase name}. Ready to continue?"
 - Wait for acknowledgment, then go back to 4a.
 
 If all phases are done:
-- **Update META.md step to `demo`.**
+- **Update META.md: step to `demo`, phases to `{total}/{total} complete`.**
 - Tell the user: "All {total} phases complete! Next up: browser demo (optional)."
 
 ## Step 5: Browser Demo
