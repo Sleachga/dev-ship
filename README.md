@@ -28,21 +28,18 @@ Add the marketplace and install the plugin:
 In Claude Code:
 
 ```
-/dev-ship:ship auth-system
-/dev-ship:ship auth-system --ticket PROJ-123
+/dev-ship:ship                                # Smart routing: see status, continue, or start new
+/dev-ship:ship auth-system                    # Start or resume a specific feature
+/dev-ship:ship auth-system --ticket PROJ-123  # Start with a ticket reference
 ```
 
-Resume a feature (picks up at the next unfinished phase):
-
-```
-/dev-ship:ship auth-system
-```
+When called with no arguments, `/dev-ship:ship` checks for existing features and offers to continue in-progress work, show status, or start something new.
 
 ## What's included
 
 | Component | Purpose |
 |-----------|---------|
-| `/dev-ship:ship` command | The main workflow slash command |
+| `/dev-ship:ship` command | Ship features, check status, or continue where you left off |
 | Stop hook | Notification sound when Claude needs your input |
 | Cross-platform notify | Windows, macOS, and Linux system sounds |
 
