@@ -1,0 +1,17 @@
+{
+  "name": "dev-ship",
+  "owner": {
+    "name": "Sandy"
+  },
+  "metadata": {
+    "description": "A lean feature-shipping workflow for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "dev-ship",
+      "source": "./",
+      "description": "Plan, implement, demo, and test features in phases with TDD, parallel research, and browser demos.",
+      "version": "0.1.0"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "dev-ship",
+  "description": "A lean feature-shipping workflow for Claude Code. TDD, phased implementation, parallel research, browser demos.",
+  "author": {
+    "name": "Sandy"
+  },
+  "license": "MIT",
+  "keywords": ["workflow", "tdd", "shipping", "developer-tools"]
+}
