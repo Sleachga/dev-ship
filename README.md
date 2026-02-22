@@ -19,7 +19,7 @@ Each step writes docs to `.ship/` in your project so you can resume across conte
 Add the marketplace and install the plugin:
 
 ```
-/plugin marketplace add {your-github-username}/dev-ship
+/plugin marketplace add Sleachga/dev-ship
 /plugin install dev-ship
 ```
 
