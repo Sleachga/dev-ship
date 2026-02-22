@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dev-ship dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-surface: #161b22;
+    --bg-hover: #1c2129;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-bright: #f0f6fc;
+    --green: #3fb950;
+    --green-dim: #238636;
+    --amber: #d29922;
+    --amber-dim: #9e6a03;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+  }
+
+  header h1 span { color: var(--green); }
+
+  .connection-status {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .connection-status .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .dot-connected { background: var(--green); }
+  .dot-disconnected { background: var(--red); }
+
+  /* Overview Table */
+  .overview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+
+  .overview-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .overview-table tr.row {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .overview-table tr.row:hover { background: var(--bg-hover); }
+
+  .overview-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid;
+  }
+
+  .status-in-progress {
+    color: var(--amber);
+    border-color: var(--amber-dim);
+    background: rgba(210, 153, 34, 0.1);
+  }
+
+  .status-complete {
+    color: var(--green);
+    border-color: var(--green-dim);
+    background: rgba(63, 185, 80, 0.1);
+  }
+
+  .progress-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-fill-active { background: var(--amber); }
+  .progress-fill-done { background: var(--green); }
+
+  /* Detail View */
+  .detail-view { display: none; }
+  .detail-view.active { display: block; }
+  .overview-view.hidden { display: none; }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.15s;
+  }
+
+  .back-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  .detail-header { margin-bottom: 24px; }
+
+  .detail-header h2 {
+    font-size: 20px;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .detail-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .detail-meta span { margin-right: 16px; }
+
+  /* Phase Timeline */
+  .timeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  .timeline-phase {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .timeline-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+  }
+
+  .timeline-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .timeline-dot-done {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--bg);
+  }
+
+  .timeline-dot-active {
+    border-color: var(--amber);
+    color: var(--amber);
+    animation: pulse 2s infinite;
+  }
+
+  .timeline-dot-upcoming {
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(210, 153, 34, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(210, 153, 34, 0); }
+  }
+
+  .timeline-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .timeline-label-active { color: var(--amber); }
+  .timeline-label-done { color: var(--green); }
+
+  .timeline-connector {
+    width: 40px;
+    height: 2px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin-bottom: 24px;
+  }
+
+  .timeline-connector-done { background: var(--green); }
+
+  /* Step Indicator */
+  .step-indicator {
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  .step-indicator h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .substeps {
+    display: flex;
+    gap: 24px;
+  }
+
+  .substep {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .substep-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .substep-done .substep-dot { background: var(--green); }
+  .substep-done { color: var(--green); }
+
+  .substep-active .substep-dot {
+    background: var(--amber);
+    animation: pulse-small 2s infinite;
+  }
+  .substep-active { color: var(--amber); font-weight: 600; }
+
+  @keyframes pulse-small {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(210, 153, 34, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(210, 153, 34, 0); }
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 12px 16px;
+    background: var(--bg-surface);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+
+  .section-header:hover { color: var(--text); }
+
+  .section-toggle { font-size: 10px; transition: transform 0.2s; }
+  .section-toggle.open { transform: rotate(90deg); }
+
+  .section-body {
+    padding: 16px;
+    display: none;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .section-body.open { display: block; }
+
+  .decision-entry {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .decision-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .decision-phase {
+    font-size: 11px;
+    color: var(--purple);
+    margin-bottom: 4px;
+  }
+
+  .decision-text {
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .commit-hash {
+    font-size: 11px;
+    color: var(--purple);
+    background: rgba(188, 140, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .summary-text {
+    color: var(--text);
+    white-space: pre-wrap;
+    margin: 4px 0;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-dim);
+  }
+
+  .empty-state p { margin-top: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><span>&gt;</span> dev-ship dashboard</h1>
+    <div class="connection-status">
+      <span class="dot dot-disconnected" id="connDot"></span>
+      <span id="connText">connecting...</span>
+    </div>
+  </header>
+
+  <div class="overview-view" id="overviewView">
+    <table class="overview-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Ticket</th>
+          <th>Step</th>
+          <th>Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="featureTable"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div style="font-size:24px; opacity:0.5">~</div>
+      <p>No features yet. Run /dev:ship to start one.</p>
+    </div>
+  </div>
+
+  <div class="detail-view" id="detailView">
+    <button class="back-btn" id="backBtn">&lt;-- back</button>
+    <div class="detail-header">
+      <h2 id="detailName"></h2>
+      <div class="detail-meta">
+        <span id="detailStarted"></span>
+        <span id="detailTicket"></span>
+      </div>
+    </div>
+    <div id="detailTimeline" class="timeline"></div>
+    <div id="detailStepIndicator" class="step-indicator"></div>
+    <div id="detailSections"></div>
+  </div>
+</div>
+
+<script>
+  let features = [];
+  let currentDetail = null;
+
+  document.getElementById('backBtn').addEventListener('click', showOverview);
+
+  // --- DOM Helpers ---
+  function el(tag, attrs, children) {
+    const e = document.createElement(tag);
+    if (attrs) {
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'className') e.className = v;
+        else if (k === 'style') Object.assign(e.style, v);
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v);
+      }
+    }
+    if (children) {
+      for (const c of Array.isArray(children) ? children : [children]) {
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else if (c) e.appendChild(c);
+      }
+    }
+    return e;
+  }
+
+  // --- SSE Connection ---
+  function connectSSE() {
+    const es = new EventSource('/events');
+    es.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      features = data.features || [];
+      renderOverview();
+      if (currentDetail) refreshDetail(currentDetail);
+    };
+    es.onopen = () => {
+      document.getElementById('connDot').className = 'dot dot-connected';
+      document.getElementById('connText').textContent = 'live';
+    };
+    es.onerror = () => {
+      document.getElementById('connDot').className = 'dot dot-disconnected';
+      document.getElementById('connText').textContent = 'reconnecting...';
+    };
+  }
+
+  // --- Overview ---
+  function renderOverview() {
+    const tbody = document.getElementById('featureTable');
+    const empty = document.getElementById('emptyState');
+
+    tbody.replaceChildren();
+
+    if (features.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    for (const f of features) {
+      const pct = f.phasesTotal ? Math.round((f.phasesComplete / f.phasesTotal) * 100) : 0;
+      const isDone = f.status === 'complete';
+
+      const row = el('tr', { className: 'row', onclick: () => showDetail(f.dir) }, [
+        el('td', { style: { color: 'var(--text-bright)' } }, [f.name || f.dir]),
+        el('td', { style: { color: 'var(--text-dim)' } }, [f.ticket || 'none']),
+        el('td', null, [f.step || '\u2014']),
+        el('td', null, [
+          (() => {
+            const bar = el('div', { className: 'progress-bar' });
+            const fill = el('div', {
+              className: 'progress-fill ' + (isDone ? 'progress-fill-done' : 'progress-fill-active'),
+            });
+            fill.style.width = pct + '%';
+            bar.appendChild(fill);
+            return bar;
+          })(),
+          el('span', { style: { fontSize: '11px', color: 'var(--text-dim)' } }, [
+            f.phasesTotal ? `${f.phasesComplete}/${f.phasesTotal}` : '0/?',
+          ]),
+        ]),
+        el('td', null, [
+          el('span', {
+            className: 'status-badge ' + (isDone ? 'status-complete' : 'status-in-progress'),
+          }, [isDone ? '\u2713 complete' : '\u25cf active']),
+        ]),
+      ]);
+
+      tbody.appendChild(row);
+    }
+  }
+
+  // --- Detail View ---
+  async function showDetail(name) {
+    currentDetail = name;
+    document.getElementById('overviewView').classList.add('hidden');
+    document.getElementById('detailView').classList.add('active');
+
+    const res = await fetch('/api/features/' + encodeURIComponent(name));
+    const detail = await res.json();
+    renderDetail(detail);
+  }
+
+  async function refreshDetail(name) {
+    try {
+      const res = await fetch('/api/features/' + encodeURIComponent(name));
+      if (res.ok) renderDetail(await res.json());
+    } catch (e) { /* ignore refresh errors */ }
+  }
+
+  function showOverview() {
+    currentDetail = null;
+    document.getElementById('overviewView').classList.remove('hidden');
+    document.getElementById('detailView').classList.remove('active');
+  }
+
+  function renderDetail(d) {
+    document.getElementById('detailName').textContent = d.name || d.dir;
+    document.getElementById('detailStarted').textContent = 'started: ' + (d.started || '\u2014');
+    document.getElementById('detailTicket').textContent =
+      d.ticket && d.ticket !== 'none' ? 'ticket: ' + d.ticket : '';
+
+    renderTimeline(d);
+    renderStepIndicator(d);
+    renderSections(d);
+  }
+
+  function renderTimeline(d) {
+    const container = document.getElementById('detailTimeline');
+    container.replaceChildren();
+
+    if (!d.phasesTotal) {
+      container.appendChild(el('span', {
+        style: { color: 'var(--text-dim)', fontSize: '12px' },
+      }, ['No phases defined yet']));
+      return;
+    }
+
+    const currentPhase = parseCurrentPhase(d.step);
+
+    for (let i = 1; i <= d.phasesTotal; i++) {
+      const isDone = i <= d.phasesComplete;
+      const isActive = i === currentPhase;
+      const dotClass = isDone ? 'timeline-dot-done' : isActive ? 'timeline-dot-active' : 'timeline-dot-upcoming';
+      const labelClass = isDone ? 'timeline-label-done' : isActive ? 'timeline-label-active' : '';
+      const phaseName = getPhaseLabel(d, i);
+
+      const phase = el('div', { className: 'timeline-phase' }, [
+        el('div', { className: 'timeline-node' }, [
+          el('div', { className: 'timeline-dot ' + dotClass }, [isDone ? '\u2713' : String(i)]),
+          el('div', { className: 'timeline-label ' + labelClass }, [phaseName]),
+        ]),
+      ]);
+
+      if (i < d.phasesTotal) {
+        const connClass = isDone ? 'timeline-connector-done' : '';
+        phase.appendChild(el('div', { className: 'timeline-connector ' + connClass }));
+      }
+
+      container.appendChild(phase);
+    }
+  }
+
+  function renderStepIndicator(d) {
+    const container = document.getElementById('detailStepIndicator');
+    container.replaceChildren();
+
+    const currentPhase = parseCurrentPhase(d.step);
+    const currentSub = parseSubStep(d.step);
+
+    if (d.status === 'complete') {
+      container.appendChild(el('h3', null, ['Current Step']));
+      container.appendChild(el('div', {
+        style: { color: 'var(--green)', fontSize: '13px' },
+      }, ['\u2713 All phases complete']));
+      return;
+    }
+
+    if (!currentPhase) {
+      container.appendChild(el('h3', null, ['Current Step']));
+      const steps = el('div', { className: 'substeps' });
+      steps.appendChild(el('div', { className: 'substep substep-active' }, [
+        el('div', { className: 'substep-dot' }),
+        d.step || 'unknown',
+      ]));
+      container.appendChild(steps);
+      return;
+    }
+
+    container.appendChild(el('h3', null, ['Phase ' + currentPhase + ' \u2014 Current Step']));
+
+    const substeps = ['context', 'implement', 'summarize'];
+    const subIdx = substeps.indexOf(currentSub);
+    const stepsDiv = el('div', { className: 'substeps' });
+
+    for (let i = 0; i < substeps.length; i++) {
+      const cls = i < subIdx ? 'substep substep-done' : i === subIdx ? 'substep substep-active' : 'substep';
+      stepsDiv.appendChild(el('div', { className: cls }, [
+        el('div', { className: 'substep-dot' }),
+        substeps[i],
+      ]));
+    }
+
+    container.appendChild(stepsDiv);
+  }
+
+  function renderSections(d) {
+    const container = document.getElementById('detailSections');
+    container.replaceChildren();
+
+    // Decision log
+    if (d.phases && d.phases.length > 0) {
+      const decisions = d.phases
+        .filter(p => p.context)
+        .map(p => {
+          const m = p.context.match(/## Decisions\n([\s\S]*?)(?=\n## |$)/);
+          return { number: p.number, text: m ? m[1].trim() : null };
+        })
+        .filter(p => p.text);
+
+      if (decisions.length > 0) {
+        container.appendChild(buildSection('Decisions', decisions.map(dec => {
+          const entry = el('div', { className: 'decision-entry' }, [
+            el('div', { className: 'decision-phase' }, ['Phase ' + dec.number]),
+            el('div', { className: 'decision-text' }, [dec.text]),
+          ]);
+          return entry;
+        }), true));
+      }
+    }
+
+    // Files & commits
+    if (d.phases && d.phases.length > 0) {
+      const summaries = d.phases
+        .filter(p => p.summary)
+        .map(p => {
+          const filesMatch = p.summary.match(/## Files changed\n([\s\S]*?)(?=\n## |$)/);
+          const commitMatch = p.summary.match(/## Commit\n([\s\S]*?)(?=\n## |$)/);
+          return {
+            number: p.number,
+            files: filesMatch ? filesMatch[1].trim() : null,
+            commit: commitMatch ? commitMatch[1].trim() : null,
+          };
+        })
+        .filter(p => p.files || p.commit);
+
+      if (summaries.length > 0) {
+        container.appendChild(buildSection('Files & Commits', summaries.map(s => {
+          const children = [el('div', { className: 'decision-phase' }, ['Phase ' + s.number])];
+          if (s.files) children.push(el('div', { className: 'summary-text' }, [s.files]));
+          if (s.commit) children.push(el('div', null, [el('span', { className: 'commit-hash' }, [s.commit])]));
+          return el('div', { className: 'decision-entry' }, children);
+        }), false));
+      }
+    }
+  }
+
+  function buildSection(title, entries, startOpen) {
+    const section = el('div', { className: 'section' });
+
+    const toggle = el('span', { className: 'section-toggle' + (startOpen ? ' open' : '') }, ['\u25b6']);
+    const header = el('div', { className: 'section-header' }, [title, toggle]);
+    const body = el('div', { className: 'section-body' + (startOpen ? ' open' : '') });
+
+    for (const entry of entries) body.appendChild(entry);
+
+    header.addEventListener('click', () => {
+      toggle.classList.toggle('open');
+      body.classList.toggle('open');
+    });
+
+    section.appendChild(header);
+    section.appendChild(body);
+    return section;
+  }
+
+  // --- Helpers ---
+  function parseCurrentPhase(step) {
+    if (!step) return null;
+    const m = step.match(/^phase-(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  function parseSubStep(step) {
+    if (!step) return null;
+    const m = step.match(/^phase-\d+:(\w+)/);
+    return m ? m[1] : null;
+  }
+
+  function getPhaseLabel(d, num) {
+    if (!d.plan) return 'Phase ' + num;
+    const m = d.plan.match(new RegExp('### Phase ' + num + ':\\s*(.+)'));
+    return m ? m[1].trim() : 'Phase ' + num;
+  }
+
+  // --- Init ---
+  connectSSE();
+</script>
+</body>
+</html>
