@@ -92,7 +92,13 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
    - **Status**: in-progress
    ```
 
-5. Tell the user: "Initialized `.ship/{FEATURE}/`. Next up: researching the codebase with parallel agents."
+5. **Launch the live dashboard**: Start the dashboard server in the background and open it in the browser so the user can watch progress in real-time:
+   ```
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/dashboard-server.js" &
+   ```
+   Capture the port from the output, then open `http://localhost:{PORT}` in the default browser (`open` on macOS, `xdg-open` on Linux). Tell the user the dashboard URL.
+
+6. Tell the user: "Initialized `.ship/{FEATURE}/`. Dashboard is live. Next up: researching the codebase with parallel agents."
 
 ## Step 2: Research (Parallel, Cheap Model)
 

@@ -31,15 +31,22 @@ In Claude Code:
 /dev-ship:ship                                # Smart routing: see status, continue, or start new
 /dev-ship:ship auth-system                    # Start or resume a specific feature
 /dev-ship:ship auth-system --ticket PROJ-123  # Start with a ticket reference
+/dev-ship:dashboard                           # Open the live dashboard in your browser
 ```
 
 When called with no arguments, `/dev-ship:ship` checks for existing features and offers to continue in-progress work, show status, or start something new.
+
+### Live Dashboard
+
+The dashboard auto-opens when you start a feature with `/dev:ship`. It shows real-time feature progress with a dark terminal aesthetic — phase timelines, step indicators, decision logs, and files changed. You can also open it manually with `/dev:dashboard`.
 
 ## What's included
 
 | Component | Purpose |
 |-----------|---------|
 | `/dev-ship:ship` command | Ship features, check status, or continue where you left off |
+| `/dev-ship:dashboard` command | Open the live feature dashboard in your browser |
+| Live dashboard | Dark terminal-aesthetic web UI with real-time updates via SSE |
 | Stop hook | Notification sound when Claude needs your input |
 | Cross-platform notify | Windows, macOS, and Linux system sounds |
 
