@@ -1,7 +1,7 @@
 ---
 name: dev:ship
-description: Plan, implement, demo, and test a feature in phases
-argument-hint: "<feature-name> [--ticket <ID>]"
+description: Ship features, check status, or continue where you left off
+argument-hint: "[feature-name] [--ticket <ID>]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion, Task, WebSearch, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__find, mcp__claude-in-chrome__screenshot, mcp__claude-in-chrome__javascript_tool
 ---
 
@@ -12,11 +12,47 @@ You are executing the `/dev:ship` workflow. Follow each step precisely.
 ## Parse Arguments
 
 Parse `$ARGUMENTS`:
-- First positional arg = feature name (required). Slugify it (lowercase, hyphens, no special chars).
+- First positional arg = feature name (optional). Slugify it (lowercase, hyphens, no special chars).
 - `--ticket <ID>` = optional ticket/issue reference (e.g. `PROJ-123`, `#45`, a URL). Store for later reference in docs.
-- If no feature name provided, use AskUserQuestion to ask for one.
 
-Set these variables for the rest of the workflow:
+**If a feature name IS provided**: Set `FEATURE` to the slugified name and skip to "State Tracking" below.
+
+**If NO feature name is provided**: Run the Smart Routing flow:
+
+### Smart Routing (no arguments)
+
+1. Check if `.ship/` directory exists. Find all `META.md` files in `.ship/*/META.md`.
+
+2. Read each META.md and extract:
+   - Feature name (from directory name and heading)
+   - Ticket (if set)
+   - Step (current state)
+   - Phases progress
+   - Status (in-progress or complete)
+
+3. **If no features exist at all**: Use AskUserQuestion to ask: "What feature do you want to ship?" with options: "Type a feature name" and "Show me an example". Set `FEATURE` to the slugified answer and proceed to Step 1: Init.
+
+4. **If in-progress features exist**: Use AskUserQuestion to ask: "What do you want to do?" with options:
+   - One option per in-progress feature: "Continue {feature-name}" with description showing its current step (e.g. "Currently at phase-2:implement, 1/3 phases done")
+   - "See full status" with description "View status of all features"
+   - "Start something new" with description "Begin a new feature"
+
+   Handle responses:
+   - **If they pick an in-progress feature**: Set `FEATURE` to that feature name and proceed to Step 1: Init (which will detect META.md and enter resume mode).
+   - **If they pick "See full status"**: Display the status table (see format below), then use AskUserQuestion again to ask "What next?" with the same options as above (minus "See full status"). Handle their response the same way.
+   - **If they pick "Start something new"**: Use AskUserQuestion to ask for the feature name. Set `FEATURE` to the slugified answer and proceed to Step 1: Init.
+
+5. **If all features are complete** (none in-progress): Display the status table, then use AskUserQuestion to ask: "All features are complete. What's next?" with options: "Start something new" (ask for feature name) and "I'm done for now" (stop).
+
+**Status table format:**
+```
+Feature          Ticket      Step                  Progress     Status
+───────────────────────────────────────────────────────────────────────
+auth-system      PROJ-123    phase-2:implement     1/4          in-progress
+dark-mode        none        complete              3/3          complete
+```
+
+After Smart Routing resolves, set these variables for the rest of the workflow:
 - `FEATURE` = slugified feature name
 - `TICKET` = ticket ID if provided, empty string otherwise
 - `SHIP_DIR` = `.ship/{FEATURE}`
