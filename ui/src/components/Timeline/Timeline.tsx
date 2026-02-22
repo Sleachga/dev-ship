@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import styles from "./Timeline.module.css";
 
 export interface TimelinePhase {
@@ -13,6 +14,12 @@ export interface TimelineProps {
 }
 
 export function Timeline({ phases, phasesComplete, currentPhase }: TimelineProps) {
+  const activeRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollIntoView({ inline: "center", block: "nearest" });
+    }
+  }, []);
+
   if (phases.length === 0) {
     return (
       <div className={styles.container}>
@@ -23,29 +30,18 @@ export function Timeline({ phases, phasesComplete, currentPhase }: TimelineProps
 
   return (
     <div className={styles.container}>
-      {phases.map((phase, i) => {
+      {phases.map((phase) => {
         const isDone = phase.number <= phasesComplete;
         const isActive = phase.number === currentPhase;
-        const dotState = isDone ? "done" : isActive ? "active" : "upcoming";
-        const isLast = i === phases.length - 1;
+        const state = isDone ? "done" : isActive ? "active" : "upcoming";
 
         return (
-          <div key={phase.number} className={styles.phase}>
-            <div className={styles.node}>
-              <div className={`${styles.dot} ${styles[`dot_${dotState}`]}`}>
-                {isDone ? "\u2713" : phase.number}
-              </div>
-              <div className={`${styles.label} ${styles[`label_${dotState}`]}`}>
-                {phase.label}
-              </div>
-            </div>
-            {!isLast && (
-              <div
-                className={`${styles.connector} ${
-                  isDone ? styles.connectorDone : ""
-                }`}
-              />
-            )}
+          <div
+            key={phase.number}
+            ref={isActive ? activeRef : undefined}
+            className={`${styles.phase} ${styles[`phase_${state}`]}`}
+          >
+            {phase.label}
           </div>
         );
       })}

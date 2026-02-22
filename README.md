@@ -38,7 +38,7 @@ When called with no arguments, `/dev-ship:ship` checks for existing features and
 
 ### Live Dashboard
 
-The dashboard auto-opens when you start a feature with `/dev:ship`. It shows real-time feature progress with a dark terminal aesthetic — phase timelines, step indicators, decision logs, and files changed. You can also open it manually with `/dev:dashboard`.
+The dashboard auto-opens when you start a feature with `/dev:ship`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. You can also open it manually with `/dev:dashboard`.
 
 ## What's included
 
