@@ -129,7 +129,9 @@ After all agents complete, combine their findings into `.ship/{FEATURE}/RESEARCH
 
 **Update META.md step to `plan`.**
 
-Tell the user: "Research complete — findings written to RESEARCH.md. Next up: I'll ask some clarifying questions and then draft a plan."
+Tell the user: "Research complete — findings written to RESEARCH.md. Next up: I'll ask some clarifying questions and then draft a plan.
+
+> Your context is safe. You can `/clear` now and run `/dev:ship {FEATURE}` — I'll resume right where we left off."
 
 ## Step 3: Plan
 
@@ -172,7 +174,9 @@ Tell the user: "Research complete — findings written to RESEARCH.md. Next up: 
 
 **Update META.md: step to `phase-1:context`, phases to `0/{total} complete`** (now that we know the total from the plan).
 
-Tell the user: "Plan approved. Next up: I'll ask a few implementation questions for Phase 1, then start coding."
+Tell the user: "Plan approved. Starting Phase 1 next.
+
+> Good time to `/clear`. Run `/dev:ship {FEATURE}` to continue — the plan is saved and I'll pick up at Phase 1."
 
 ## Step 4: Phase Loop
 
@@ -199,7 +203,9 @@ For each phase in PLAN.md:
 
 **Update META.md step to `phase-{N}:implement`.**
 
-Tell the user: "Context saved to `phase-{N}/CONTEXT.md`. Next up: writing tests and implementing. If your context window is getting large, you can `/clear` and run `/dev:ship {FEATURE}` to resume — I'll pick up right here."
+Tell the user: "Context saved to `phase-{N}/CONTEXT.md`. Next up: writing tests and implementing.
+
+> You can `/clear` now. Run `/dev:ship {FEATURE}` — I'll resume at phase {N} implementation with a fresh context window."
 
 ### 4b. Implement (TDD)
 
@@ -239,12 +245,16 @@ Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
 
 If there are more phases:
 - **Update META.md: step to `phase-{N+1}:context`, phases to `{N}/{total} complete`.**
-- Tell the user: "Phase {N} complete! {N}/{total} phases done. Next up: Phase {N+1} — {next phase name}. Ready to continue?"
+- Tell the user: "Phase {N} complete! {N}/{total} phases done. Next up: Phase {N+1} — {next phase name}.
+
+> `/clear` recommended. Run `/dev:ship {FEATURE}` to start Phase {N+1} with a fresh context."
 - Wait for acknowledgment, then go back to 4a.
 
 If all phases are done:
 - **Update META.md: step to `demo`, phases to `{total}/{total} complete`.**
-- Tell the user: "All {total} phases complete! Next up: browser demo (optional)."
+- Tell the user: "All {total} phases complete! Next up: browser demo (optional).
+
+> `/clear` recommended before the demo. Run `/dev:ship {FEATURE}` to continue."
 
 ## Step 5: Browser Demo
 
@@ -261,7 +271,9 @@ If all phases are done:
 
 **Update META.md step to `test-plan`.**
 
-Tell the user: "Demo done. Last step: writing the manual test plan."
+Tell the user: "Demo done. Last step: writing the manual test plan.
+
+> `/clear` recommended. Run `/dev:ship {FEATURE}` to finish up with the test plan."
 
 ## Step 6: Manual Test Plan
 
