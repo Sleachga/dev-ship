@@ -21,11 +21,26 @@ Set these variables for the rest of the workflow:
 - `TICKET` = ticket ID if provided, empty string otherwise
 - `SHIP_DIR` = `.ship/{FEATURE}`
 
+## State Tracking
+
+All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records exactly where we are. Valid states:
+
+- `research` — Running parallel research agents
+- `plan` — Writing the plan
+- `phase-N:context` — Gathering context for phase N
+- `phase-N:implement` — Implementing phase N (TDD)
+- `phase-N:summarize` — Writing phase N summary
+- `demo` — Browser demo step
+- `test-plan` — Writing manual test plan
+- `complete` — All done
+
+**Update META.md's `step` field at the START of each sub-step, BEFORE doing the work.** This way, if we crash or the user clears context, we know exactly where to resume.
+
 ## Step 1: Init
 
-1. Check if `.ship/{FEATURE}/PLAN.md` exists:
-   - **If yes**: Resume mode. Find the first phase directory without a `SUMMARY.md`. Announce "Resuming {FEATURE} at phase N" and skip to Step 4 for that phase.
-   - **If no**: Continue with fresh init.
+1. Check if `.ship/{FEATURE}/META.md` exists:
+   - **If yes**: Resume mode. Read META.md, extract the `step` field, and jump directly to that step. Announce: "Resuming **{FEATURE}** at: {step description}."
+   - **If no**: Continue with fresh init below.
 
 2. Create the directory: `.ship/{FEATURE}/`
 
@@ -36,10 +51,15 @@ Set these variables for the rest of the workflow:
    # {FEATURE}
    - **Started**: {current date}
    - **Ticket**: {TICKET or "none"}
+   - **Step**: research
    - **Status**: in-progress
    ```
 
+5. Tell the user: "Initialized `.ship/{FEATURE}/`. Next up: researching the codebase with parallel agents."
+
 ## Step 2: Research (Parallel, Cheap Model)
+
+**Update META.md step to `research`** (if not already).
 
 Spawn 2-3 Explore agents **in parallel** using `model: "haiku"` to research the codebase:
 
@@ -64,7 +84,13 @@ After all agents complete, combine their findings into `.ship/{FEATURE}/RESEARCH
 {Agent 3 findings}
 ```
 
+**Update META.md step to `plan`.**
+
+Tell the user: "Research complete — findings written to RESEARCH.md. Next up: I'll ask some clarifying questions and then draft a plan."
+
 ## Step 3: Plan
+
+**Update META.md step to `plan`** (if not already).
 
 1. Read `.ship/{FEATURE}/RESEARCH.md`
 2. Use AskUserQuestion to ask clarifying questions about:
@@ -101,13 +127,19 @@ After all agents complete, combine their findings into `.ship/{FEATURE}/RESEARCH
 5. Present the plan to the user. Use AskUserQuestion: "Does this plan look good? Any changes before I start Phase 1?"
 6. Wait for approval before proceeding.
 
+**Update META.md step to `phase-1:context`.**
+
+Tell the user: "Plan approved. Next up: I'll ask a few implementation questions for Phase 1, then start coding."
+
 ## Step 4: Phase Loop
 
 For each phase in PLAN.md:
 
 ### 4a. Context Gathering
 
-1. Announce: "Starting Phase {N}: {phase name}"
+**Update META.md step to `phase-{N}:context`.**
+
+1. Announce: "**Phase {N}: {phase name}** — gathering context."
 2. Use AskUserQuestion to ask 2-5 clarifying questions specific to this phase's implementation details
 3. Create `.ship/{FEATURE}/phase-{N}/` directory
 4. Write `.ship/{FEATURE}/phase-{N}/CONTEXT.md`:
@@ -121,9 +153,14 @@ For each phase in PLAN.md:
    ## Approach
    {Brief description of implementation approach based on answers}
    ```
-5. Suggest: "Context is saved. If your context window is getting large, you can `/clear` and run `/dev:ship {FEATURE}` to resume — I'll pick up from this phase."
+
+**Update META.md step to `phase-{N}:implement`.**
+
+Tell the user: "Context saved to `phase-{N}/CONTEXT.md`. Next up: writing tests and implementing. If your context window is getting large, you can `/clear` and run `/dev:ship {FEATURE}` to resume — I'll pick up right here."
 
 ### 4b. Implement (TDD)
+
+**Update META.md step to `phase-{N}:implement`** (if not already).
 
 1. If resuming after a clear, read `.ship/{FEATURE}/PLAN.md` and `.ship/{FEATURE}/phase-{N}/CONTEXT.md` to restore context
 2. **Write failing tests first** based on the phase's success criteria
@@ -134,7 +171,11 @@ For each phase in PLAN.md:
 7. Commit with a descriptive message: `feat({FEATURE}): {phase description}`
    - If TICKET is set, include it: `feat({FEATURE}): {phase description} [{TICKET}]`
 
+**Update META.md step to `phase-{N}:summarize`.**
+
 ### 4c. Summarize
+
+**Update META.md step to `phase-{N}:summarize`** (if not already).
 
 Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
 ```
@@ -153,11 +194,20 @@ Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
 {commit hash and message}
 ```
 
-Then proceed to the next phase (back to 4a), or if all phases are done, continue to Step 5.
+If there are more phases:
+- **Update META.md step to `phase-{N+1}:context`.**
+- Tell the user: "Phase {N} complete! {completed}/{total} phases done. Next up: Phase {N+1} — {next phase name}. Ready to continue?"
+- Wait for acknowledgment, then go back to 4a.
+
+If all phases are done:
+- **Update META.md step to `demo`.**
+- Tell the user: "All {total} phases complete! Next up: browser demo (optional)."
 
 ## Step 5: Browser Demo
 
-1. Ask: "Ready for a browser demo? I'll start the dev server and walk through the feature."
+**Update META.md step to `demo`.**
+
+1. Ask: "Ready for a browser demo? I'll start the dev server and walk through the feature. Or we can skip to the manual test plan."
 2. If user agrees:
    - Start the dev server if not running (`npm run dev` or equivalent — check package.json)
    - Use Chrome automation MCP tools to open the app
@@ -166,7 +216,13 @@ Then proceed to the next phase (back to 4a), or if all phases are done, continue
    - Write `.ship/{FEATURE}/DEMO-NOTES.md` with the walkthrough
 3. If user declines, skip to Step 6.
 
+**Update META.md step to `test-plan`.**
+
+Tell the user: "Demo done. Last step: writing the manual test plan."
+
 ## Step 6: Manual Test Plan
+
+**Update META.md step to `test-plan`.**
 
 Write `.ship/{FEATURE}/TEST-PLAN.md`:
 ```
@@ -189,8 +245,16 @@ Write `.ship/{FEATURE}/TEST-PLAN.md`:
 {edge cases to verify}
 ```
 
-Announce: "Feature '{FEATURE}' is shipped! TEST-PLAN.md is ready for manual verification."
+**Update META.md step to `complete` and status to `complete`.**
 
-Update `.ship/{FEATURE}/META.md` status to "complete".
+Tell the user: "Feature **{FEATURE}** is shipped! Here's what was created:
+- `RESEARCH.md` — codebase research findings
+- `PLAN.md` — phase breakdown
+- `phase-*/CONTEXT.md` — decisions per phase
+- `phase-*/SUMMARY.md` — what was built per phase
+- `TEST-PLAN.md` — manual testing checklist
+{- `DEMO-NOTES.md` — browser demo walkthrough (if demo was done)}
+
+Run through `TEST-PLAN.md` to verify everything works."
 
 Done.
