@@ -440,6 +440,7 @@
     const es = new EventSource('/events');
     es.onmessage = (e) => {
       const data = JSON.parse(e.data);
+      if (data.type === 'reload') { location.reload(); return; }
       features = data.features || [];
       renderOverview();
       if (currentDetail) refreshDetail(currentDetail);

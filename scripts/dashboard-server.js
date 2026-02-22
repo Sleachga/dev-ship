@@ -113,6 +113,24 @@ function startWatching() {
   }
 }
 
+// Watch dashboard HTML for live reload during development
+let htmlDebounce = null;
+function startHtmlWatching() {
+  const htmlPath = path.join(__dirname, '..', 'dashboard', 'index.html');
+  if (!fs.existsSync(htmlPath)) return;
+
+  try {
+    fs.watch(htmlPath, () => {
+      clearTimeout(htmlDebounce);
+      htmlDebounce = setTimeout(() => {
+        broadcastSSE({ type: 'reload' });
+      }, 200);
+    });
+  } catch (err) {
+    // Non-critical — live reload just won't work
+  }
+}
+
 // --- HTTP Server ---
 
 const server = http.createServer((req, res) => {
@@ -178,6 +196,7 @@ server.listen(0, () => {
   const { port } = server.address();
   console.log(`Dashboard: http://localhost:${port}`);
   startWatching();
+  startHtmlWatching();
 });
 
 // Graceful shutdown
