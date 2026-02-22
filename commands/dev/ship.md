@@ -92,11 +92,19 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
    - **Status**: in-progress
    ```
 
-5. **Launch the live dashboard**: Start the dashboard server in the background and open it in the browser so the user can watch progress in real-time:
+5. **Launch the live dashboard**: Start the dashboard server in the background and open it in the browser so the user can watch progress in real-time. Use this exact sequence:
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/dashboard-server.js" > /tmp/dev-ship-dashboard.log 2>&1 &
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/dashboard-server.js" &
+   Then wait briefly and read the port from the log:
+   ```bash
+   sleep 1 && grep -o 'http://localhost:[0-9]*' /tmp/dev-ship-dashboard.log
    ```
-   Capture the port from the output, then open `http://localhost:{PORT}` in the default browser (`open` on macOS, `xdg-open` on Linux). Tell the user the dashboard URL.
+   Finally, open the URL in the default browser:
+   - macOS: `open http://localhost:{PORT}`
+   - Linux: `xdg-open http://localhost:{PORT}`
+
+   If the port isn't found in the log after 2 seconds, warn the user and continue without the dashboard.
 
 6. Tell the user: "Initialized `.ship/{FEATURE}/`. Dashboard is live. Next up: researching the codebase with parallel agents."
 
