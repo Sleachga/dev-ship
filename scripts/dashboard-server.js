@@ -4,6 +4,24 @@ const path = require('path');
 
 const SHIP_DIR = path.join(process.cwd(), '.ship');
 
+// --- Project Name Detection ---
+
+function detectProjectName() {
+  const cwd = process.cwd();
+  // Prefer package.json name if available
+  const pkgPath = path.join(cwd, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      if (pkg.name) return pkg.name;
+    } catch (e) { /* fall through */ }
+  }
+  // Fall back to directory basename
+  return path.basename(cwd);
+}
+
+const PROJECT_NAME = detectProjectName();
+
 // --- META.md Parser ---
 
 function parseMeta(content) {
@@ -146,7 +164,7 @@ const server = http.createServer((req, res) => {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
     });
-    res.write(`data: ${JSON.stringify({ type: 'connected', features: readFeatures() })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'connected', project: PROJECT_NAME, features: readFeatures() })}\n\n`);
     sseClients.add(res);
     req.on('close', () => sseClients.delete(res));
     return;
@@ -194,7 +212,7 @@ const server = http.createServer((req, res) => {
 // Start on auto-assigned port
 server.listen(0, () => {
   const { port } = server.address();
-  console.log(`Dashboard: http://localhost:${port}`);
+  console.log(`Dashboard (${PROJECT_NAME}): http://localhost:${port}`);
   startWatching();
   startHtmlWatching();
 });

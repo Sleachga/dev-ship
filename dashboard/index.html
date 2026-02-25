@@ -368,7 +368,7 @@
 <body>
 <div class="container">
   <header>
-    <h1><span>&gt;</span> dev-ship dashboard</h1>
+    <h1><span>&gt;</span> <span id="projectName">dev-ship</span> <span style="color: var(--text-dim); font-weight: 400">dashboard</span></h1>
     <div class="connection-status">
       <span class="dot dot-disconnected" id="connDot"></span>
       <span id="connText">connecting...</span>
@@ -412,6 +412,7 @@
 <script>
   let features = [];
   let currentDetail = null;
+  let projectName = null;
 
   document.getElementById('backBtn').addEventListener('click', showOverview);
 
@@ -441,6 +442,11 @@
     es.onmessage = (e) => {
       const data = JSON.parse(e.data);
       if (data.type === 'reload') { location.reload(); return; }
+      if (data.project && !projectName) {
+        projectName = data.project;
+        document.title = data.project + ' — dev-ship';
+        document.getElementById('projectName').textContent = data.project;
+      }
       features = data.features || [];
       renderOverview();
       if (currentDetail) refreshDetail(currentDetail);
