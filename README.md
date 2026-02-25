@@ -32,14 +32,14 @@ Add the marketplace and install the plugin:
 In Claude Code:
 
 ```
-/dev:ship                                # Smart routing: see status, continue, or start new
-/dev:ship auth-system                    # Start or resume a specific feature
-/dev:ship auth-system --ticket PROJ-123  # Start with a ticket reference
+/dev:sail                                # Smart routing: see status, continue, or start new
+/dev:sail auth-system                    # Start or resume a specific feature
+/dev:sail auth-system --ticket PROJ-123  # Start with a ticket reference
 /dev:dashboard                           # Open the live dashboard in your browser
 /dev:uninstall                           # Clean up project data or fully remove the plugin
 ```
 
-When called with no arguments, `/dev:ship` checks for existing features and offers to continue in-progress work, show status, or start something new.
+When called with no arguments, `/dev:sail` checks for existing features and offers to continue in-progress work, show status, or start something new.
 
 ## How it works
 
@@ -49,11 +49,11 @@ When called with no arguments, `/dev:ship` checks for existing features and offe
 4. **Demo** — Browser walkthrough with screenshots via Chrome automation
 5. **Test** — Manual test plan with numbered checklists
 
-Each step writes docs to `.ship/` in your project. If you hit a context limit, just `/clear` and run `/dev:ship` — it reads the saved state and resumes from where you left off.
+Each step writes docs to `.ship/` in your project. If you hit a context limit, just `/clear` and run `/dev:sail` — it reads the saved state and resumes from where you left off.
 
 ## Live dashboard
 
-The dashboard auto-opens when you start a feature with `/dev:ship`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. Your project name is auto-detected and shown in the header and browser tab.
+The dashboard auto-opens when you start a feature with `/dev:sail`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. Your project name is auto-detected and shown in the header and browser tab.
 
 You can also open it manually anytime with `/dev:dashboard`.
 
@@ -61,7 +61,7 @@ You can also open it manually anytime with `/dev:dashboard`.
 
 | Component | Purpose |
 |-----------|---------|
-| `/dev:ship` command | Ship features, check status, or continue where you left off |
+| `/dev:sail` command | Sail through features — check status, or continue where you left off |
 | `/dev:dashboard` command | Open the live feature dashboard in your browser |
 | `/dev:uninstall` command | Clean up `.ship/` project data or fully remove the plugin |
 | Live dashboard | Dark terminal-aesthetic web UI with real-time updates via SSE |

@@ -31,7 +31,7 @@ If the user chose "Project cleanup":
 
 4. Check if `.gitignore` has a `.ship/` entry. If so, ask: "Remove `.ship/` from `.gitignore` too?" with options "Yes" and "No". If yes, remove the line.
 
-5. Tell the user: "Project cleaned up. The dev-ship plugin is still installed — you can start fresh with `/dev:ship` anytime."
+5. Tell the user: "Project cleaned up. The dev-ship plugin is still installed — you can start fresh with `/dev:sail` anytime."
 
 ## Step 2b: Full Uninstall
 
