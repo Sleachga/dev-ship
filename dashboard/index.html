@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛵</text></svg>">
 <title>dev-ship dashboard</title>
 <style>
   :root {
@@ -13,10 +14,8 @@
     --text: #c9d1d9;
     --text-dim: #8b949e;
     --text-bright: #f0f6fc;
-    --green: #3fb950;
-    --green-dim: #238636;
-    --amber: #d29922;
-    --amber-dim: #9e6a03;
+    --accent: #3fb950;
+    --accent-dim: #238636;
     --red: #f85149;
     --blue: #58a6ff;
     --purple: #bc8cff;
@@ -54,7 +53,7 @@
     letter-spacing: 0.5px;
   }
 
-  header h1 span { color: var(--green); }
+  header h1 span { color: var(--accent); }
 
   .connection-status {
     font-size: 11px;
@@ -71,8 +70,45 @@
     vertical-align: middle;
   }
 
-  .dot-connected { background: var(--green); }
+  .dot-connected { background: var(--accent); }
   .dot-disconnected { background: var(--red); }
+
+  /* Shared toolbar */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .toolbar-search {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .toolbar-search:focus { border-color: var(--blue); }
+  .toolbar-search::placeholder { color: var(--text-dim); }
+
+  .toolbar-select {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .toolbar-select:focus { border-color: var(--blue); }
 
   /* Overview Table */
   .overview-table {
@@ -115,15 +151,15 @@
   }
 
   .status-in-progress {
-    color: var(--amber);
-    border-color: var(--amber-dim);
-    background: rgba(210, 153, 34, 0.1);
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
   }
 
   .status-complete {
-    color: var(--green);
-    border-color: var(--green-dim);
-    background: rgba(63, 185, 80, 0.1);
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
   }
 
   .progress-bar {
@@ -143,8 +179,8 @@
     transition: width 0.3s ease;
   }
 
-  .progress-fill-active { background: var(--amber); }
-  .progress-fill-done { background: var(--green); }
+  .progress-fill-active { background: var(--accent); opacity: 0.7; }
+  .progress-fill-done { background: var(--accent); }
 
   /* Detail View */
   .detail-view { display: none; }
@@ -214,12 +250,12 @@
   }
 
   .phase-done {
-    background: var(--green-dim);
-    color: var(--green);
+    background: var(--accent-dim);
+    color: var(--accent);
   }
 
   .phase-active {
-    background: var(--amber-dim);
+    background: var(--accent-dim);
     color: var(--text-bright);
     animation: chevron-pulse 2s infinite;
   }
@@ -272,18 +308,18 @@
     flex-shrink: 0;
   }
 
-  .substep-done .substep-dot { background: var(--green); }
-  .substep-done { color: var(--green); }
+  .substep-done .substep-dot { background: var(--accent); }
+  .substep-done { color: var(--accent); }
 
   .substep-active .substep-dot {
-    background: var(--amber);
+    background: var(--accent);
     animation: pulse-small 2s infinite;
   }
-  .substep-active { color: var(--amber); font-weight: 600; }
+  .substep-active { color: var(--accent); font-weight: 600; }
 
   @keyframes pulse-small {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(210, 153, 34, 0.4); }
-    50% { box-shadow: 0 0 0 4px rgba(210, 153, 34, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); }
+    50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 0%, transparent); }
   }
 
   /* Sections */
@@ -338,7 +374,6 @@
 
   .decision-text {
     color: var(--text);
-    white-space: pre-wrap;
   }
 
   .commit-hash {
@@ -351,9 +386,271 @@
 
   .summary-text {
     color: var(--text);
-    white-space: pre-wrap;
     margin: 4px 0;
   }
+
+  /* Backlog */
+  .backlog-section {
+    margin-top: 32px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+
+  .backlog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .backlog-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .backlog-count {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* backlog reuses .toolbar, .toolbar-search, .toolbar-select */
+
+  .backlog-group {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+
+  .backlog-group-header {
+    padding: 10px 16px;
+    background: var(--bg-surface);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .backlog-group-header:hover { background: var(--bg-hover); }
+
+  .backlog-group-body { display: none; }
+  .backlog-group-body.open { display: block; }
+
+  .backlog-group.completed-group { opacity: 0.7; }
+  .backlog-group.completed-group .backlog-group-header { color: var(--text-dim); }
+
+  .backlog-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+
+  .backlog-item:hover { background: var(--bg-hover); }
+
+  .backlog-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 6px;
+    background: var(--text-dim);
+  }
+
+  .backlog-dot-done {
+    background: var(--accent);
+  }
+
+  .backlog-text { color: var(--text); flex: 1; }
+  .backlog-text-done { color: var(--text-dim); text-decoration: line-through; }
+
+  .backlog-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .backlog-add {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .add-btn {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    width: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .add-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .backlog-no-results {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  /* Markdown rendering */
+  .md-code {
+    background: rgba(110, 118, 129, 0.2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-bright);
+  }
+
+  .md-list {
+    margin: 4px 0;
+    padding-left: 20px;
+  }
+
+  .md-list li { margin-bottom: 4px; }
+  .md-line { margin: 2px 0; }
+
+  /* Settings Panel */
+  .settings-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .settings-btn:hover { color: var(--text); }
+
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+  }
+
+  .settings-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .settings-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings-overlay.open .settings-panel {
+    transform: translateX(0);
+  }
+
+  .settings-panel h3 {
+    font-size: 14px;
+    color: var(--text-bright);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .settings-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.selected { border-color: var(--text-bright); }
+
+  .custom-color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .custom-color-input {
+    width: 40px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+  }
+
+  .custom-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+  .custom-color-input::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 4px; }
+
+  .custom-color-label {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .settings-save {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: auto;
+  }
+
+  .settings-save:hover { background: var(--accent); color: var(--bg); }
 
   /* Empty state */
   .empty-state {
@@ -367,15 +664,39 @@
 </head>
 <body>
 <div class="container">
-  <header>
-    <h1><span>&gt;</span> <span id="projectName">dev-ship</span> <span style="color: var(--text-dim); font-weight: 400">dashboard</span></h1>
-    <div class="connection-status">
-      <span class="dot dot-disconnected" id="connDot"></span>
-      <span id="connText">connecting...</span>
+  <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+      <h1><span>&gt;</span> <span id="projectName">dev-ship</span> <span style="color: var(--text-dim); font-weight: 400">dashboard</span></h1>
+      <div class="connection-status">
+        <span class="dot dot-disconnected" id="connDot"></span>
+        <span id="connText">connecting...</span>
+      </div>
     </div>
+    <button class="settings-btn" id="settingsBtn" title="Settings">&#9881;</button>
   </header>
 
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel" id="settingsPanel">
+      <h3>Settings</h3>
+      <div class="settings-label">Accent Color</div>
+      <div class="color-swatches" id="colorSwatches"></div>
+      <div class="custom-color-row">
+        <input type="color" class="custom-color-input" id="customColor" value="#3fb950" />
+        <span class="custom-color-label">Custom</span>
+      </div>
+      <button class="settings-save" id="settingsSave">Save</button>
+    </div>
+  </div>
+
   <div class="overview-view" id="overviewView">
+    <div class="toolbar">
+      <input type="text" id="featureSearch" class="toolbar-search" placeholder="Search features..." />
+      <select id="featureFilter" class="toolbar-select">
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="complete">Complete</option>
+      </select>
+    </div>
     <table class="overview-table">
       <thead>
         <tr>
@@ -390,7 +711,28 @@
     </table>
     <div class="empty-state" id="emptyState" style="display:none">
       <div style="font-size:24px; opacity:0.5">~</div>
-      <p>No features yet. Run /dev:sail to start one.</p>
+      <p>No features yet. Run /dev-ship:sail to start one.</p>
+    </div>
+    <div class="backlog-section" id="backlogSection" style="display:none">
+      <div class="backlog-header">
+        <h2>Backlog</h2>
+        <span class="backlog-count" id="backlogCount"></span>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="backlogSearch" class="toolbar-search" placeholder="Search backlog..." />
+        <select id="backlogSort" class="toolbar-select">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="alpha">A &rarr; Z</option>
+        </select>
+      </div>
+      <div class="backlog-add">
+        <select id="backlogAddSection" class="toolbar-select"></select>
+        <input type="text" id="backlogAddText" class="toolbar-search" placeholder="Add to backlog..." />
+        <button id="backlogAddBtn" class="add-btn">+</button>
+      </div>
+      <div id="backlogGroups"></div>
+      <div id="backlogCompleted"></div>
     </div>
   </div>
 
@@ -411,10 +753,11 @@
 
 <script>
   let features = [];
+  let backlog = { sections: [] };
   let currentDetail = null;
   let projectName = null;
 
-  document.getElementById('backBtn').addEventListener('click', showOverview);
+  document.getElementById('backBtn').addEventListener('click', () => navigate('/'));
 
   // --- DOM Helpers ---
   function el(tag, attrs, children) {
@@ -436,6 +779,64 @@
     return e;
   }
 
+  // --- Markdown Rendering ---
+  function renderInlineMd(text) {
+    const frag = document.createDocumentFragment();
+    const re = /\*\*(.+?)\*\*|`(.+?)`|\*(.+?)\*/g;
+    let last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      if (m[1]) frag.appendChild(el('strong', { style: { color: 'var(--text-bright)' } }, [m[1]]));
+      else if (m[2]) frag.appendChild(el('code', { className: 'md-code' }, [m[2]]));
+      else if (m[3]) frag.appendChild(el('em', null, [m[3]]));
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    return frag;
+  }
+
+  function renderMdBlock(text) {
+    const frag = document.createDocumentFragment();
+    const lines = text.split('\n');
+    let i = 0;
+    while (i < lines.length) {
+      if (!lines[i].trim()) { i++; continue; }
+      if (/^\s*[-*] /.test(lines[i])) {
+        const ul = document.createElement('ul');
+        ul.className = 'md-list';
+        while (i < lines.length && /^\s*[-*] /.test(lines[i])) {
+          const li = document.createElement('li');
+          li.appendChild(renderInlineMd(lines[i].replace(/^\s*[-*] /, '')));
+          while (i + 1 < lines.length && /^\s{2,}/.test(lines[i + 1]) && !/^\s*[-*] /.test(lines[i + 1])) {
+            i++;
+            li.appendChild(document.createElement('br'));
+            li.appendChild(renderInlineMd(lines[i].trim()));
+          }
+          ul.appendChild(li);
+          i++;
+        }
+        frag.appendChild(ul);
+      } else if (/^\s*\d+\.\s/.test(lines[i])) {
+        const ol = document.createElement('ol');
+        ol.className = 'md-list';
+        while (i < lines.length && /^\s*\d+\.\s/.test(lines[i])) {
+          const li = document.createElement('li');
+          li.appendChild(renderInlineMd(lines[i].replace(/^\s*\d+\.\s/, '')));
+          ol.appendChild(li);
+          i++;
+        }
+        frag.appendChild(ol);
+      } else {
+        const div = document.createElement('div');
+        div.className = 'md-line';
+        div.appendChild(renderInlineMd(lines[i]));
+        frag.appendChild(div);
+        i++;
+      }
+    }
+    return frag;
+  }
+
   // --- SSE Connection ---
   function connectSSE() {
     const es = new EventSource('/events');
@@ -448,7 +849,10 @@
         document.getElementById('projectName').textContent = data.project;
       }
       features = data.features || [];
+      backlog = data.backlog || { sections: [] };
+      if (data.settings) applySettings(data.settings);
       renderOverview();
+      renderBacklog();
       if (currentDetail) refreshDetail(currentDetail);
     };
     es.onopen = () => {
@@ -465,8 +869,19 @@
   function renderOverview() {
     const tbody = document.getElementById('featureTable');
     const empty = document.getElementById('emptyState');
+    const query = (document.getElementById('featureSearch').value || '').toLowerCase();
+    const filter = document.getElementById('featureFilter').value;
 
     tbody.replaceChildren();
+
+    const filtered = features.filter(f => {
+      if (query && !(f.name || f.dir).toLowerCase().includes(query)
+          && !(f.ticket || '').toLowerCase().includes(query)
+          && !(f.step || '').toLowerCase().includes(query)) return false;
+      if (filter === 'active' && f.status === 'complete') return false;
+      if (filter === 'complete' && f.status !== 'complete') return false;
+      return true;
+    });
 
     if (features.length === 0) {
       empty.style.display = 'block';
@@ -475,11 +890,27 @@
 
     empty.style.display = 'none';
 
-    for (const f of features) {
+    if (filtered.length === 0 && query) {
+      tbody.appendChild(el('tr', null, [
+        el('td', { colspan: '5', style: { textAlign: 'center', color: 'var(--text-dim)', padding: '24px' } },
+          ['No features match "' + query + '"']),
+      ]));
+      return;
+    }
+
+    if (filtered.length === 0 && filter !== 'all') {
+      tbody.appendChild(el('tr', null, [
+        el('td', { colspan: '5', style: { textAlign: 'center', color: 'var(--text-dim)', padding: '24px' } },
+          ['No ' + filter + ' features']),
+      ]));
+      return;
+    }
+
+    for (const f of filtered) {
       const pct = f.phasesTotal ? Math.round((f.phasesComplete / f.phasesTotal) * 100) : 0;
       const isDone = f.status === 'complete';
 
-      const row = el('tr', { className: 'row', onclick: () => showDetail(f.dir) }, [
+      const row = el('tr', { className: 'row', onclick: () => navigate('/feature/' + encodeURIComponent(f.dir)) }, [
         el('td', { style: { color: 'var(--text-bright)' } }, [f.name || f.dir]),
         el('td', { style: { color: 'var(--text-dim)' } }, [f.ticket || 'none']),
         el('td', null, [f.step || '\u2014']),
@@ -508,15 +939,178 @@
     }
   }
 
-  // --- Detail View ---
-  async function showDetail(name) {
-    currentDetail = name;
-    document.getElementById('overviewView').classList.add('hidden');
-    document.getElementById('detailView').classList.add('active');
+  // --- Backlog ---
+  function renderBacklog() {
+    const sectionEl = document.getElementById('backlogSection');
+    const groupsEl = document.getElementById('backlogGroups');
+    const completedEl = document.getElementById('backlogCompleted');
+    const countEl = document.getElementById('backlogCount');
+    const query = (document.getElementById('backlogSearch').value || '').toLowerCase();
+    const sortMode = document.getElementById('backlogSort').value;
 
-    const res = await fetch('/api/features/' + encodeURIComponent(name));
-    const detail = await res.json();
-    renderDetail(detail);
+    groupsEl.replaceChildren();
+    completedEl.replaceChildren();
+
+    const sections = backlog.sections || [];
+    sectionEl.style.display = 'block';
+    updateSectionDropdown();
+
+    const hasItems = sections.some(s => s.items.length > 0);
+    if (!hasItems) {
+      countEl.textContent = 'empty';
+      return;
+    }
+
+    let totalOpen = 0, totalDone = 0;
+    for (const s of sections) {
+      for (const item of s.items) { item.done ? totalDone++ : totalOpen++; }
+    }
+    countEl.textContent = totalOpen + ' open' + (totalDone ? ', ' + totalDone + ' done' : '');
+
+    function sortItems(items) {
+      return [...items].sort((a, b) => {
+        if (sortMode === 'newest') return (b.added || '').localeCompare(a.added || '');
+        if (sortMode === 'oldest') return (a.added || '').localeCompare(b.added || '');
+        return a.text.localeCompare(b.text);
+      });
+    }
+
+    function matchesSearch(item) {
+      return !query || item.text.toLowerCase().includes(query);
+    }
+
+    // Open items grouped by section
+    let hasVisible = false;
+    for (const s of sections) {
+      const openItems = sortItems(s.items.filter(i => !i.done && matchesSearch(i)));
+      if (openItems.length === 0) continue;
+      hasVisible = true;
+      groupsEl.appendChild(buildBacklogGroup(s.name, openItems, true, false));
+    }
+
+    // Completed items in separate collapsed section
+    const allDone = [];
+    for (const s of sections) {
+      allDone.push(...s.items.filter(i => i.done && matchesSearch(i)));
+    }
+    if (allDone.length > 0) {
+      hasVisible = true;
+      completedEl.appendChild(buildBacklogGroup(
+        'Completed (' + allDone.length + ')', sortItems(allDone), false, true
+      ));
+    }
+
+    if (!hasVisible && query) {
+      groupsEl.appendChild(el('div', { className: 'backlog-no-results' }, ['No items match "' + query + '"']));
+    }
+  }
+
+  function buildBacklogGroup(name, items, startOpen, isCompleted) {
+    const group = el('div', { className: 'backlog-group' + (isCompleted ? ' completed-group' : '') });
+    const toggle = el('span', { className: 'section-toggle' + (startOpen ? ' open' : '') }, ['\u25b6']);
+    const header = el('div', { className: 'backlog-group-header' }, [name, toggle]);
+    const body = el('div', { className: 'backlog-group-body' + (startOpen ? ' open' : '') });
+
+    for (const item of items) {
+      const dot = el('div', {
+        className: 'backlog-dot' + (item.done ? ' backlog-dot-done' : ''),
+      });
+
+      const textEl = el('span', {
+        className: 'backlog-text' + (item.done ? ' backlog-text-done' : ''),
+      });
+      textEl.appendChild(renderInlineMd(item.text));
+
+      const children = [dot, textEl];
+      if (item.added) {
+        children.push(el('span', { className: 'backlog-date' }, [item.added]));
+      }
+      body.appendChild(el('div', { className: 'backlog-item' }, children));
+    }
+
+    header.addEventListener('click', () => {
+      toggle.classList.toggle('open');
+      body.classList.toggle('open');
+    });
+
+    group.appendChild(header);
+    group.appendChild(body);
+    return group;
+  }
+
+  // --- Backlog Add ---
+  function updateSectionDropdown() {
+    const select = document.getElementById('backlogAddSection');
+    const current = select.value;
+    const sections = (backlog.sections || []).map(s => s.name);
+    select.replaceChildren();
+    for (const name of sections) {
+      select.appendChild(el('option', { value: name }, [name]));
+    }
+    if (current && sections.includes(current)) select.value = current;
+  }
+
+  async function addBacklogItem() {
+    const textInput = document.getElementById('backlogAddText');
+    const sectionSelect = document.getElementById('backlogAddSection');
+    const text = textInput.value.trim();
+    if (!text) return;
+
+    const section = sectionSelect.value;
+
+    try {
+      const res = await fetch('/api/backlog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, section }),
+      });
+      if (res.ok) textInput.value = '';
+    } catch (e) { /* SSE will refresh the UI */ }
+  }
+
+  document.getElementById('backlogAddBtn').addEventListener('click', addBacklogItem);
+  document.getElementById('backlogAddText').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addBacklogItem();
+  });
+
+  // --- Router ---
+  function navigate(path) {
+    history.pushState(null, '', path);
+    handleRoute();
+  }
+
+  function handleRoute() {
+    const path = location.pathname;
+    const featureMatch = path.match(/^\/feature\/([^/]+)$/);
+
+    if (featureMatch) {
+      const name = decodeURIComponent(featureMatch[1]);
+      currentDetail = name;
+      document.getElementById('overviewView').classList.add('hidden');
+      document.getElementById('detailView').classList.add('active');
+      fetchDetail(name);
+    } else {
+      currentDetail = null;
+      document.getElementById('overviewView').classList.remove('hidden');
+      document.getElementById('detailView').classList.remove('active');
+    }
+
+    // Update page title
+    if (currentDetail && projectName) {
+      document.title = currentDetail + ' — ' + projectName + ' — dev-ship';
+    } else if (projectName) {
+      document.title = projectName + ' — dev-ship';
+    }
+  }
+
+  window.addEventListener('popstate', handleRoute);
+
+  // --- Detail View ---
+  async function fetchDetail(name) {
+    try {
+      const res = await fetch('/api/features/' + encodeURIComponent(name));
+      if (res.ok) renderDetail(await res.json());
+    } catch (e) { /* ignore fetch errors */ }
   }
 
   async function refreshDetail(name) {
@@ -524,12 +1118,6 @@
       const res = await fetch('/api/features/' + encodeURIComponent(name));
       if (res.ok) renderDetail(await res.json());
     } catch (e) { /* ignore refresh errors */ }
-  }
-
-  function showOverview() {
-    currentDetail = null;
-    document.getElementById('overviewView').classList.remove('hidden');
-    document.getElementById('detailView').classList.remove('active');
   }
 
   function renderDetail(d) {
@@ -584,7 +1172,7 @@
     if (d.status === 'complete') {
       container.appendChild(el('h3', null, ['Current Step']));
       container.appendChild(el('div', {
-        style: { color: 'var(--green)', fontSize: '13px' },
+        style: { color: 'var(--accent)', fontSize: '13px' },
       }, ['\u2713 All phases complete']));
       return;
     }
@@ -635,7 +1223,7 @@
         container.appendChild(buildSection('Decisions', decisions.map(dec => {
           const entry = el('div', { className: 'decision-entry' }, [
             el('div', { className: 'decision-phase' }, ['Phase ' + dec.number]),
-            el('div', { className: 'decision-text' }, [dec.text]),
+            (() => { const d = el('div', { className: 'decision-text' }); d.appendChild(renderMdBlock(dec.text)); return d; })(),
           ]);
           return entry;
         }), true));
@@ -660,7 +1248,7 @@
       if (summaries.length > 0) {
         container.appendChild(buildSection('Files & Commits', summaries.map(s => {
           const children = [el('div', { className: 'decision-phase' }, ['Phase ' + s.number])];
-          if (s.files) children.push(el('div', { className: 'summary-text' }, [s.files]));
+          if (s.files) { const fd = el('div', { className: 'summary-text' }); fd.appendChild(renderMdBlock(s.files)); children.push(fd); }
           if (s.commit) children.push(el('div', null, [el('span', { className: 'commit-hash' }, [s.commit])]));
           return el('div', { className: 'decision-entry' }, children);
         }), false));
@@ -706,7 +1294,107 @@
     return m ? m[1].trim() : 'Phase ' + num;
   }
 
+  // --- Settings ---
+  const PRESET_COLORS = [
+    { name: 'Green',  hex: '#3fb950' },
+    { name: 'Blue',   hex: '#58a6ff' },
+    { name: 'Purple', hex: '#bc8cff' },
+    { name: 'Amber',  hex: '#d29922' },
+    { name: 'Rose',   hex: '#f778ba' },
+    { name: 'Teal',   hex: '#2dd4bf' },
+    { name: 'Orange', hex: '#f0883e' },
+    { name: 'Red',    hex: '#f85149' },
+  ];
+
+  let pendingAccent = null;
+
+  function initSwatches() {
+    const container = document.getElementById('colorSwatches');
+    for (const color of PRESET_COLORS) {
+      const swatch = el('div', {
+        className: 'color-swatch',
+        title: color.name,
+        style: { background: color.hex },
+        onclick: () => selectColor(color.hex),
+      });
+      swatch.dataset.color = color.hex;
+      container.appendChild(swatch);
+    }
+  }
+
+  function selectColor(hex) {
+    pendingAccent = hex;
+    document.getElementById('customColor').value = hex;
+    document.querySelectorAll('.color-swatch').forEach(s => {
+      s.classList.toggle('selected', s.dataset.color === hex);
+    });
+    applyAccentColor(hex);
+  }
+
+  function dimColor(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return '#' + [r, g, b].map(c => Math.round(c * 0.55).toString(16).padStart(2, '0')).join('');
+  }
+
+  function applyAccentColor(hex) {
+    const root = document.documentElement;
+    root.style.setProperty('--accent', hex);
+    root.style.setProperty('--accent-dim', dimColor(hex));
+  }
+
+  function applySettings(settings) {
+    if (settings && settings.accentColor) {
+      applyAccentColor(settings.accentColor);
+      pendingAccent = settings.accentColor;
+      document.getElementById('customColor').value = settings.accentColor;
+      document.querySelectorAll('.color-swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.color === settings.accentColor);
+      });
+    }
+  }
+
+  async function saveSettings() {
+    if (!pendingAccent) return;
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accentColor: pendingAccent }),
+      });
+    } catch (e) { /* will sync via SSE */ }
+    closeSettings();
+  }
+
+  function openSettings() {
+    document.getElementById('settingsOverlay').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('open');
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('settingsSave').addEventListener('click', saveSettings);
+  document.getElementById('settingsOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+  });
+  document.getElementById('customColor').addEventListener('input', (e) => {
+    const hex = e.target.value;
+    pendingAccent = hex;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    applyAccentColor(hex);
+  });
+
+  initSwatches();
+
   // --- Init ---
+  document.getElementById('featureSearch').addEventListener('input', renderOverview);
+  document.getElementById('featureFilter').addEventListener('change', renderOverview);
+  document.getElementById('backlogSearch').addEventListener('input', renderBacklog);
+  document.getElementById('backlogSort').addEventListener('change', renderBacklog);
+  handleRoute(); // Route on initial page load
   connectSSE();
 </script>
 </body>

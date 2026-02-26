@@ -1,16 +1,16 @@
 ---
-name: dev:dashboard
+name: dev-ship:dashboard
 description: Open the live feature dashboard in your browser
 allowed-tools: Bash, Read, Glob, AskUserQuestion
 ---
 
-# /dev:dashboard — Live Dashboard
+# /dev-ship:dashboard — Live Dashboard
 
-You are executing the `/dev:dashboard` command. Start the dashboard server and open it in the browser.
+You are executing the `/dev-ship:dashboard` command. Start the dashboard server and open it in the browser.
 
 ## Steps
 
-1. Check if `.ship/` directory exists. If not, tell the user: "No `.ship/` directory found. Start a feature with `/dev:sail` first." and stop.
+1. Check if `.ship/` directory exists. If not, tell the user: "No `.ship/` directory found. Start a feature with `/dev-ship:sail` first." and stop.
 
 2. Start the dashboard server in the background, writing output to a log file:
    ```bash

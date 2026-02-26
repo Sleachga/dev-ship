@@ -16,6 +16,7 @@ A structured, resumable, zero-dependency feature-shipping workflow for [Claude C
 - **Live dashboard** — Real-time web UI with dark terminal aesthetic, auto-detects your project name
 - **Zero dependencies** — Native Node.js only, nothing to install beyond the plugin
 - **Cross-platform** — Windows, macOS, and Linux support (notifications, file paths)
+- **Sound notifications** — Plays a system sound when Claude stops and needs your input
 - **Auto-update** — Notifies you at session start when a newer version is available
 
 ## Install
@@ -32,14 +33,14 @@ Add the marketplace and install the plugin:
 In Claude Code:
 
 ```
-/dev:sail                                # Smart routing: see status, continue, or start new
-/dev:sail auth-system                    # Start or resume a specific feature
-/dev:sail auth-system --ticket PROJ-123  # Start with a ticket reference
-/dev:dashboard                           # Open the live dashboard in your browser
-/dev:uninstall                           # Clean up project data or fully remove the plugin
+/dev-ship:sail                                # Smart routing: see status, continue, or start new
+/dev-ship:sail auth-system                    # Start or resume a specific feature
+/dev-ship:sail auth-system --ticket PROJ-123  # Start with a ticket reference
+/dev-ship:dashboard                           # Open the live dashboard in your browser
+/dev-ship:uninstall                           # Clean up project data or fully remove the plugin
 ```
 
-When called with no arguments, `/dev:sail` checks for existing features and offers to continue in-progress work, show status, or start something new.
+When called with no arguments, `/dev-ship:sail` checks for existing features and offers to continue in-progress work, show status, or start something new.
 
 ## How it works
 
@@ -49,21 +50,21 @@ When called with no arguments, `/dev:sail` checks for existing features and offe
 4. **Demo** — Browser walkthrough with screenshots via Chrome automation
 5. **Test** — Manual test plan with numbered checklists
 
-Each step writes docs to `.ship/` in your project. If you hit a context limit, just `/clear` and run `/dev:sail` — it reads the saved state and resumes from where you left off.
+Each step writes docs to `.ship/` in your project. If you hit a context limit, just `/clear` and run `/dev-ship:sail` — it reads the saved state and resumes from where you left off.
 
 ## Live dashboard
 
-The dashboard auto-opens when you start a feature with `/dev:sail`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. Your project name is auto-detected and shown in the header and browser tab.
+The dashboard auto-opens when you start a feature with `/dev-ship:sail`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. Your project name is auto-detected and shown in the header and browser tab.
 
-You can also open it manually anytime with `/dev:dashboard`.
+You can also open it manually anytime with `/dev-ship:dashboard`.
 
 ## What's included
 
 | Component | Purpose |
 |-----------|---------|
-| `/dev:sail` command | Sail through features — check status, or continue where you left off |
-| `/dev:dashboard` command | Open the live feature dashboard in your browser |
-| `/dev:uninstall` command | Clean up `.ship/` project data or fully remove the plugin |
+| `/dev-ship:sail` command | Sail through features — check status, or continue where you left off |
+| `/dev-ship:dashboard` command | Open the live feature dashboard in your browser |
+| `/dev-ship:uninstall` command | Clean up `.ship/` project data or fully remove the plugin |
 | Live dashboard | Dark terminal-aesthetic web UI with real-time updates via SSE |
 | SessionStart hook | Checks for newer plugin versions and notifies you |
 | Stop hook | Notification sound when Claude needs your input |
@@ -93,7 +94,7 @@ Each feature creates a `.ship/` directory in your project:
 ## Uninstall
 
 ```
-/dev:uninstall
+/dev-ship:uninstall
 ```
 
 This gives you two options: remove just the `.ship/` project data, or fully uninstall the plugin from Claude Code.

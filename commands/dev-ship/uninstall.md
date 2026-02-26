@@ -1,12 +1,12 @@
 ---
-name: dev:uninstall
+name: dev-ship:uninstall
 description: Clean up .ship/ data or fully uninstall the dev-ship plugin
 allowed-tools: Read, Bash, AskUserQuestion, Glob
 ---
 
-# /dev:uninstall — Cleanup & Uninstall
+# /dev-ship:uninstall — Cleanup & Uninstall
 
-You are executing the `/dev:uninstall` command.
+You are executing the `/dev-ship:uninstall` command.
 
 ## Step 1: Ask what to remove
 
@@ -31,7 +31,7 @@ If the user chose "Project cleanup":
 
 4. Check if `.gitignore` has a `.ship/` entry. If so, ask: "Remove `.ship/` from `.gitignore` too?" with options "Yes" and "No". If yes, remove the line.
 
-5. Tell the user: "Project cleaned up. The dev-ship plugin is still installed — you can start fresh with `/dev:sail` anytime."
+5. Tell the user: "Project cleaned up. The dev-ship plugin is still installed — you can start fresh with `/dev-ship:sail` anytime."
 
 ## Step 2b: Full Uninstall
 

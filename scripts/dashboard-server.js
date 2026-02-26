@@ -102,6 +102,108 @@ function readFeatureDetail(name) {
   return detail;
 }
 
+// --- Settings ---
+
+const SETTINGS_PATH = path.join(SHIP_DIR, 'SETTINGS.json');
+const DEFAULT_SETTINGS = { accentColor: '#3fb950' };
+
+function readSettings() {
+  if (!fs.existsSync(SETTINGS_PATH)) return { ...DEFAULT_SETTINGS };
+  try {
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8')) };
+  } catch (e) {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function writeSettings(updates) {
+  if (!fs.existsSync(SHIP_DIR)) fs.mkdirSync(SHIP_DIR, { recursive: true });
+  const current = readSettings();
+  const merged = { ...current, ...updates };
+  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
+  return merged;
+}
+
+// --- BACKLOG.md Parser ---
+
+function readBacklog() {
+  const backlogPath = path.join(SHIP_DIR, 'BACKLOG.md');
+  if (!fs.existsSync(backlogPath)) return { sections: [] };
+
+  const content = fs.readFileSync(backlogPath, 'utf-8');
+  const sections = [];
+  let current = null;
+
+  for (const line of content.split('\n')) {
+    const sectionMatch = line.match(/^## (.+)$/);
+    if (sectionMatch) {
+      current = { name: sectionMatch[1].trim(), items: [] };
+      sections.push(current);
+      continue;
+    }
+
+    const itemMatch = line.match(/^- \[([ x])\] (.+?)(?:\s*\((\d{4}-\d{2}-\d{2})\))?$/);
+    if (itemMatch) {
+      if (!current) {
+        current = { name: 'General', items: [] };
+        sections.push(current);
+      }
+      current.items.push({
+        done: itemMatch[1] === 'x',
+        text: itemMatch[2].trim(),
+        added: itemMatch[3] || null,
+      });
+    }
+  }
+
+  return { sections };
+}
+
+function addBacklogItem(text, sectionName) {
+  const backlogPath = path.join(SHIP_DIR, 'BACKLOG.md');
+
+  if (!fs.existsSync(SHIP_DIR)) fs.mkdirSync(SHIP_DIR, { recursive: true });
+
+  const today = new Date().toISOString().split('T')[0];
+  const newLine = '- [ ] ' + text + ' (' + today + ')';
+
+  if (!fs.existsSync(backlogPath)) {
+    const section = sectionName || 'General';
+    fs.writeFileSync(backlogPath, '# Backlog\n\n## ' + section + '\n' + newLine + '\n', 'utf-8');
+    return;
+  }
+
+  const lines = fs.readFileSync(backlogPath, 'utf-8').split('\n');
+  let inTarget = false;
+  let lastItemIdx = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/^## /.test(lines[i])) {
+      if (inTarget) break;
+      if (sectionName && lines[i] === '## ' + sectionName) {
+        inTarget = true;
+        lastItemIdx = i;
+      }
+    }
+    if (inTarget && /^- \[/.test(lines[i])) {
+      lastItemIdx = i;
+    }
+  }
+
+  if (inTarget && lastItemIdx >= 0) {
+    lines.splice(lastItemIdx + 1, 0, newLine);
+  } else if (sectionName) {
+    lines.push('', '## ' + sectionName, newLine);
+  } else {
+    // No section specified — append to the last section's items
+    let lastItem = lines.length - 1;
+    while (lastItem > 0 && !lines[lastItem].trim()) lastItem--;
+    lines.splice(lastItem + 1, 0, newLine);
+  }
+
+  fs.writeFileSync(backlogPath, lines.join('\n'), 'utf-8');
+}
+
 // --- SSE ---
 
 const sseClients = new Set();
@@ -123,7 +225,7 @@ function startWatching() {
       // Debounce rapid changes (editors often write multiple times)
       clearTimeout(watchDebounce);
       watchDebounce = setTimeout(() => {
-        broadcastSSE({ type: 'update', features: readFeatures() });
+        broadcastSSE({ type: 'update', features: readFeatures(), backlog: readBacklog(), settings: readSettings() });
       }, 300);
     });
   } catch (err) {
@@ -164,7 +266,7 @@ const server = http.createServer((req, res) => {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
     });
-    res.write(`data: ${JSON.stringify({ type: 'connected', project: PROJECT_NAME, features: readFeatures() })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'connected', project: PROJECT_NAME, features: readFeatures(), backlog: readBacklog(), settings: readSettings() })}\n\n`);
     sseClients.add(res);
     req.on('close', () => sseClients.delete(res));
     return;
@@ -174,6 +276,57 @@ const server = http.createServer((req, res) => {
   if (url.pathname === '/api/features') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(readFeatures()));
+    return;
+  }
+
+  // API: backlog (GET = read, POST = add item)
+  if (url.pathname === '/api/backlog') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const { text, section } = JSON.parse(body);
+          if (!text || !text.trim()) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Text is required' }));
+            return;
+          }
+          addBacklogItem(text.trim(), section || null);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid request' }));
+        }
+      });
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(readBacklog()));
+    return;
+  }
+
+  // API: settings (GET = read, POST = update)
+  if (url.pathname === '/api/settings') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const updates = JSON.parse(body);
+          const merged = writeSettings(updates);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(merged));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid request' }));
+        }
+      });
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(readSettings()));
     return;
   }
 
@@ -191,22 +344,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve dashboard HTML
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    const htmlPath = path.join(__dirname, '..', 'dashboard', 'index.html');
-    if (fs.existsSync(htmlPath)) {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(fs.readFileSync(htmlPath, 'utf-8'));
-    } else {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<html><body><h1>Dashboard coming soon</h1><p>Phase 2 will build the frontend.</p></body></html>');
-    }
-    return;
+  // Serve dashboard HTML for all non-API routes (SPA routing)
+  const htmlPath = path.join(__dirname, '..', 'dashboard', 'index.html');
+  if (fs.existsSync(htmlPath)) {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(fs.readFileSync(htmlPath, 'utf-8'));
+  } else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
   }
-
-  // 404
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Not found' }));
 });
 
 // Start on auto-assigned port

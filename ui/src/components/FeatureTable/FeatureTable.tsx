@@ -13,7 +13,7 @@ export function FeatureTable({ features, onFeatureClick }: FeatureTableProps) {
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>~</div>
-        <p>No features yet. Run /dev:sail to start one.</p>
+        <p>No features yet. Run /dev-ship:sail to start one.</p>
       </div>
     );
   }
