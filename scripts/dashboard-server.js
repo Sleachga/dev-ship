@@ -3,6 +3,32 @@ const fs = require('fs');
 const path = require('path');
 
 const SHIP_DIR = path.join(process.cwd(), '.ship');
+const PID_FILE = path.join(SHIP_DIR, '.dashboard-pid');
+
+// --- Stale Server Cleanup ---
+
+function killStaleServer() {
+  if (!fs.existsSync(PID_FILE)) return;
+  try {
+    const old = JSON.parse(fs.readFileSync(PID_FILE, 'utf-8'));
+    if (old.pid && old.pid !== process.pid) {
+      process.kill(old.pid, 'SIGTERM');
+    }
+  } catch (e) {
+    // Process already dead or file corrupt — either way, fine
+  }
+}
+
+function writePidFile(port) {
+  if (!fs.existsSync(SHIP_DIR)) fs.mkdirSync(SHIP_DIR, { recursive: true });
+  fs.writeFileSync(PID_FILE, JSON.stringify({ pid: process.pid, port }) + '\n', 'utf-8');
+}
+
+function removePidFile() {
+  try { fs.unlinkSync(PID_FILE); } catch (e) { /* already gone */ }
+}
+
+killStaleServer();
 
 // --- Project Name Detection ---
 
@@ -358,17 +384,17 @@ const server = http.createServer((req, res) => {
 // Start on auto-assigned port
 server.listen(0, () => {
   const { port } = server.address();
+  writePidFile(port);
   console.log(`Dashboard (${PROJECT_NAME}): http://localhost:${port}`);
   startWatching();
   startHtmlWatching();
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+function shutdown() {
+  removePidFile();
   for (const res of sseClients) res.end();
   server.close(() => process.exit(0));
-});
-process.on('SIGTERM', () => {
-  for (const res of sseClients) res.end();
-  server.close(() => process.exit(0));
-});
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
