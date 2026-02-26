@@ -13,7 +13,8 @@ A structured, resumable, zero-dependency feature-shipping workflow for [Claude C
 - **Phased workflow** — Research, plan, implement, demo, and test in structured steps
 - **Resume anywhere** — All state saved to `.ship/` so you can `/clear` and pick up where you left off
 - **Parallel research** — Multiple agents explore your codebase simultaneously using cheap Haiku models
-- **Live dashboard** — Real-time web UI with dark terminal aesthetic, auto-detects your project name
+- **Project backlog** — Quick-capture backlog items from the CLI or the dashboard, organized by section
+- **Live dashboard** — Real-time web UI with dark terminal aesthetic, customizable accent colors
 - **Zero dependencies** — Native Node.js only, nothing to install beyond the plugin
 - **Cross-platform** — Windows, macOS, and Linux support (notifications, file paths)
 - **Sound notifications** — Plays a system sound when Claude stops and needs your input
@@ -36,6 +37,9 @@ In Claude Code:
 /dev-ship:sail                                # Smart routing: see status, continue, or start new
 /dev-ship:sail auth-system                    # Start or resume a specific feature
 /dev-ship:sail auth-system --ticket PROJ-123  # Start with a ticket reference
+/dev-ship:backlog                             # View your backlog interactively
+/dev-ship:backlog fix the login bug           # Quick-add an item
+/dev-ship:backlog fix search --section bugs   # Add to a specific section
 /dev-ship:dashboard                           # Open the live dashboard in your browser
 /dev-ship:uninstall                           # Clean up project data or fully remove the plugin
 ```
@@ -56,6 +60,8 @@ Each step writes docs to `.ship/` in your project. If you hit a context limit, j
 
 The dashboard auto-opens when you start a feature with `/dev-ship:sail`. It shows real-time feature progress with a dark terminal aesthetic — chevron-style phase tracker, step indicators, decision logs, and files changed. The phase tracker auto-scrolls to keep the active phase in view. Your project name is auto-detected and shown in the header and browser tab.
 
+The dashboard also includes a **backlog panel** with search, sort, collapsible sections, and inline add — so you can manage your backlog without leaving the browser. A **settings panel** (gear icon) lets you customize the accent color with presets or a custom picker.
+
 You can also open it manually anytime with `/dev-ship:dashboard`.
 
 ## What's included
@@ -63,6 +69,7 @@ You can also open it manually anytime with `/dev-ship:dashboard`.
 | Component | Purpose |
 |-----------|---------|
 | `/dev-ship:sail` command | Sail through features — check status, or continue where you left off |
+| `/dev-ship:backlog` command | Quick-capture backlog items, organize by section, mark done or drop |
 | `/dev-ship:dashboard` command | Open the live feature dashboard in your browser |
 | `/dev-ship:uninstall` command | Clean up `.ship/` project data or fully remove the plugin |
 | Live dashboard | Dark terminal-aesthetic web UI with real-time updates via SSE |
@@ -76,6 +83,8 @@ Each feature creates a `.ship/` directory in your project:
 
 ```
 .ship/
+  BACKLOG.md             # Project backlog with sections and checkbox items
+  SETTINGS.json          # Dashboard settings (accent color)
   auth-system/
     META.md              # Feature metadata, ticket ref, status
     RESEARCH.md          # Parallel research findings
