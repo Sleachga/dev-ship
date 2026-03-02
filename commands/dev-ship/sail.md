@@ -9,6 +9,53 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion, Task, WebSe
 
 You are executing the `/dev-ship:sail` workflow. Follow each step precisely.
 
+## Frontmatter Standard
+
+**Every `.md` file you create MUST begin with a YAML frontmatter block** containing three fields:
+
+- **`toc`**: List of top-level sections in the document (for fast scanning)
+- **`dependencies`**: Relative paths to related `.ship/` files this document relies on
+- **`version`**: Metadata about when the file was created and what it tracks
+
+Use this shape:
+```yaml
+---
+toc:
+  - Section Name
+dependencies:
+  - ../META.md
+version:
+  created: YYYY-MM-DD
+  feature: {FEATURE}
+---
+```
+
+Omit `dependencies` entries that don't exist yet at creation time. Use `[]` if there are no dependencies.
+
+## Frontmatter Migration
+
+When **resuming** a feature (META.md already exists), check every existing `.ship/` file for missing frontmatter before jumping to the saved step. For each file that lacks a `---` block at the top:
+
+1. Read the file contents.
+2. Determine the correct frontmatter based on the file type (use the templates below as reference).
+3. Prepend the frontmatter block to the file using the Edit tool.
+4. Do this silently — no need to announce each migration to the user.
+
+**File-type reference for migration:**
+
+| File | toc entries | dependencies |
+|------|-------------|--------------|
+| `META.md` | `Status Overview` | `[]` |
+| `RESEARCH.md` | `Relevant Code`, `Architecture & Conventions`, `Testing Patterns` | `META.md` |
+| `PLAN.md` | `Overview`, `Research Summary`, `Phases`, `Testing Strategy` | `META.md`, `RESEARCH.md` |
+| `phase-N/CONTEXT.md` | `Decisions`, `Approach` | `../../META.md`, `../../PLAN.md` |
+| `phase-N/SUMMARY.md` | `What was done`, `Files changed`, `Commit` | `../../META.md`, `CONTEXT.md` |
+| `DEMO-NOTES.md` | `Walkthrough` | `META.md`, `TEST-PLAN.md` |
+| `TEST-PLAN.md` | `Setup`, `Test Cases`, `Edge Cases` | `META.md`, `PLAN.md` |
+| `BACKLOG.md` | `General` (or actual section names) | `[]` |
+
+For `version`, use the earliest date you can infer (commit date, file mtime via `stat`, or today's date as fallback).
+
 ## Parse Arguments
 
 Parse `$ARGUMENTS`:
@@ -75,7 +122,7 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
 ## Step 1: Init
 
 1. Check if `.ship/{FEATURE}/META.md` exists:
-   - **If yes**: Resume mode. Read META.md, extract the `step` field, and jump directly to that step. Announce: "Resuming **{FEATURE}** at: {step description}."
+   - **If yes**: Resume mode. Read META.md, extract the `step` field. Run the **Frontmatter Migration** procedure (see above) on all existing files in `.ship/{FEATURE}/`. Then jump directly to the saved step. Announce: "Resuming **{FEATURE}** at: {step description}."
    - **If no**: Continue with fresh init below.
 
 2. Create the directory: `.ship/{FEATURE}/`
@@ -84,6 +131,14 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
 
 4. Write `.ship/{FEATURE}/META.md`:
    ```
+   ---
+   toc:
+     - Status Overview
+   dependencies: []
+   version:
+     created: {current date}
+     last_modified: {current date}
+   ---
    # {FEATURE}
    - **Started**: {current date}
    - **Ticket**: {TICKET or "none"}
@@ -122,6 +177,17 @@ Give each agent enough context about the feature from the user's description.
 
 After all agents complete, combine their findings into `.ship/{FEATURE}/RESEARCH.md`:
 ```
+---
+toc:
+  - Relevant Code
+  - Architecture & Conventions
+  - Testing Patterns
+dependencies:
+  - META.md
+version:
+  created: {current date}
+  feature: {FEATURE}
+---
 # Research: {FEATURE}
 {ticket line if TICKET is set}
 
@@ -154,6 +220,20 @@ Tell the user: "Research complete — findings written to RESEARCH.md. Next up: 
 4. Write `.ship/{FEATURE}/PLAN.md`:
 
 ```
+---
+toc:
+  - Overview
+  - Research Summary
+  - Phases
+  - Testing Strategy
+dependencies:
+  - META.md
+  - RESEARCH.md
+version:
+  created: {current date}
+  feature: {FEATURE}
+  phase_count: {total number of phases}
+---
 # Plan: {FEATURE}
 {ticket line if TICKET is set}
 
@@ -199,6 +279,18 @@ For each phase in PLAN.md:
 3. Create `.ship/{FEATURE}/phase-{N}/` directory
 4. Write `.ship/{FEATURE}/phase-{N}/CONTEXT.md`:
    ```
+   ---
+   toc:
+     - Decisions
+     - Approach
+   dependencies:
+     - ../../META.md
+     - ../../PLAN.md
+   version:
+     created: {current date}
+     feature: {FEATURE}
+     phase: {N}
+   ---
    # Phase {N}: {name}
    {ticket line if TICKET is set}
 
@@ -236,6 +328,21 @@ Tell the user: "Context saved to `phase-{N}/CONTEXT.md`. Next up: writing tests 
 
 Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
 ```
+---
+toc:
+  - What was done
+  - Files changed
+  - Tests
+  - Commit
+dependencies:
+  - ../../META.md
+  - CONTEXT.md
+version:
+  created: {current date}
+  feature: {FEATURE}
+  phase: {N}
+  commit: {commit hash}
+---
 # Phase {N} Summary: {name}
 
 ## What was done
@@ -274,7 +381,22 @@ If all phases are done:
    - Use Chrome automation MCP tools to open the app
    - Walk through the feature, narrating each step
    - Take screenshots of key states
-   - Write `.ship/{FEATURE}/DEMO-NOTES.md` with the walkthrough
+   - Write `.ship/{FEATURE}/DEMO-NOTES.md` with the walkthrough, using this template:
+     ```
+     ---
+     toc:
+       - Walkthrough
+     dependencies:
+       - META.md
+       - TEST-PLAN.md
+     version:
+       created: {current date}
+       feature: {FEATURE}
+     ---
+     # Demo Notes: {FEATURE}
+     ## Walkthrough
+     {narrated steps and screenshots}
+     ```
 3. If user declines, skip to Step 6.
 
 **Update META.md step to `test-plan`.**
@@ -289,6 +411,18 @@ Tell the user: "Demo done. Last step: writing the manual test plan.
 
 Write `.ship/{FEATURE}/TEST-PLAN.md`:
 ```
+---
+toc:
+  - Setup
+  - Test Cases
+  - Edge Cases
+dependencies:
+  - META.md
+  - PLAN.md
+version:
+  created: {current date}
+  feature: {FEATURE}
+---
 # Manual Test Plan: {FEATURE}
 {ticket line if TICKET is set}
 
