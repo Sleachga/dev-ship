@@ -9,6 +9,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 
 You are executing the `/dev-ship:recap` command. This command analyzes git history, identifies work not yet tracked by dev-ship, groups it into logical features, and (with user confirmation) creates `.ship/` entries so the dashboard reflects everything.
 
+**Every `.md` file you create MUST begin with a YAML frontmatter block** with `toc`, `dependencies`, and `version` fields. See sail.md's "Frontmatter Standard" section for the full spec.
+
 ## Step 1: Parse Arguments
 
 Parse `$ARGUMENTS`:
@@ -124,6 +126,14 @@ If a feature directory already exists in `.ship/`:
 
 Write `.ship/{feature-name}/META.md`:
 ```
+---
+toc:
+  - Status Overview
+dependencies: []
+version:
+  created: {earliest commit date, YYYY-MM-DD format}
+  last_modified: {earliest commit date, YYYY-MM-DD format}
+---
 # {feature-name}
 - **Started**: {earliest commit date, YYYY-MM-DD format}
 - **Ticket**: none
@@ -141,6 +151,19 @@ This format is critical — it must match the dashboard's `parseMeta()` regex:
 
 Write `.ship/{feature-name}/phase-1/SUMMARY.md`:
 ```
+---
+toc:
+  - What was done
+  - Files changed
+  - Commit
+dependencies:
+  - ../../META.md
+version:
+  created: {earliest commit date, YYYY-MM-DD format}
+  feature: {feature-name}
+  phase: 1
+  commit: {most recent shortHash in group}
+---
 # Phase 1 Summary: {feature-name}
 
 ## What was done

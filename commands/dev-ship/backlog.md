@@ -16,6 +16,14 @@ The backlog lives at `.ship/BACKLOG.md` in the project root. Create `.ship/` if 
 ### File Format
 
 ```markdown
+---
+toc:
+  - General
+dependencies: []
+version:
+  created: YYYY-MM-DD
+  last_modified: YYYY-MM-DD
+---
 # Backlog
 
 ## Frontend
@@ -28,6 +36,8 @@ The backlog lives at `.ship/BACKLOG.md` in the project root. Create `.ship/` if 
 ```
 
 Items are grouped under `## Section` headers. Each item is a markdown checkbox with the date added in parentheses. Items without a section go under `## General`. Completed items stay in place with `[x]`.
+
+When **creating** `BACKLOG.md` for the first time, include the frontmatter block. Set `toc` to the list of section names present in the file. When **updating** an existing file that lacks frontmatter, prepend the frontmatter block first (migration), then apply the requested change.
 
 ## Parse Arguments
 
