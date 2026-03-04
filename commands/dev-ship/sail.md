@@ -75,12 +75,12 @@ Parse `$ARGUMENTS`:
    - Ticket (if set)
    - Step (current state)
    - Phases progress
-   - Status (in-progress or complete)
+   - Status (`in-progress`, `active`, or `complete`)
 
 3. **If no features exist at all**: Use AskUserQuestion to ask: "What feature do you want to ship?" with options: "Type a feature name" and "Show me an example". Set `FEATURE` to the slugified answer and proceed to Step 1: Init.
 
-4. **If in-progress features exist**: Use AskUserQuestion to ask: "What do you want to do?" with options:
-   - One option per in-progress feature: "Continue {feature-name}" with description showing its current step (e.g. "Currently at phase-2:implement, 1/3 phases done")
+4. **If any non-complete features exist** (status `in-progress` or `active`): Use AskUserQuestion to ask: "What do you want to do?" with options:
+   - One option per non-complete feature: "Continue {feature-name}" with description showing its current step and status (e.g. "Currently at phase-2:implement, 1/3 phases done — active")
    - "See full status" with description "View status of all features"
    - "Start something new" with description "Begin a new feature"
 
@@ -89,7 +89,7 @@ Parse `$ARGUMENTS`:
    - **If they pick "See full status"**: Display the status table (see format below), then use AskUserQuestion again to ask "What next?" with the same options as above (minus "See full status"). Handle their response the same way.
    - **If they pick "Start something new"**: Use AskUserQuestion to ask for the feature name. Set `FEATURE` to the slugified answer and proceed to Step 1: Init.
 
-5. **If all features are complete** (none in-progress): Display the status table, then use AskUserQuestion to ask: "All features are complete. What's next?" with options: "Start something new" (ask for feature name) and "I'm done for now" (stop).
+5. **If all features are complete** (none `in-progress` or `active`): Display the status table, then use AskUserQuestion to ask: "All features are complete. What's next?" with options: "Start something new" (ask for feature name) and "I'm done for now" (stop).
 
 **Status table format:**
 ```
@@ -122,8 +122,10 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
 ## Step 1: Init
 
 1. Check if `.ship/{FEATURE}/META.md` exists:
-   - **If yes**: Resume mode. Read META.md, extract the `step` field. Run the **Frontmatter Migration** procedure (see above) on all existing files in `.ship/{FEATURE}/`. Then jump directly to the saved step. Announce: "Resuming **{FEATURE}** at: {step description}."
-   - **If no**: Continue with fresh init below.
+   - **If yes**: Resume mode. Read META.md, extract the `step` field. Run the **Frontmatter Migration** procedure (see above) on all existing files in `.ship/{FEATURE}/`. **Demote other in-progress features** (see below). Then jump directly to the saved step. Announce: "Resuming **{FEATURE}** at: {step description}."
+   - **If no**: **Demote other in-progress features** (see below). Continue with fresh init below.
+
+**Demote other in-progress features**: Before setting `{FEATURE}` to `in-progress`, scan all `.ship/*/META.md` files (excluding `.ship/{FEATURE}/META.md`). For any file that contains `**Status**: in-progress`, use the Edit tool to change that line to `**Status**: active`. Only one feature should be `in-progress` at a time.
 
 2. Create the directory: `.ship/{FEATURE}/`
 
