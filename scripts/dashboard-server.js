@@ -132,7 +132,7 @@ function readFeatureDetail(name) {
 // --- Settings ---
 
 const SETTINGS_PATH = path.join(SHIP_DIR, 'SETTINGS.json');
-const DEFAULT_SETTINGS = { accentColor: '#3fb950' };
+const DEFAULT_SETTINGS = { theme: 'emerald' };
 
 function readSettings() {
   if (!fs.existsSync(SETTINGS_PATH)) return { ...DEFAULT_SETTINGS };
