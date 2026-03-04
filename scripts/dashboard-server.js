@@ -81,7 +81,8 @@ function readFeatures() {
       const metaPath = path.join(SHIP_DIR, d.name, 'META.md');
       if (!fs.existsSync(metaPath)) return null;
       const content = fs.readFileSync(metaPath, 'utf-8');
-      return { dir: d.name, ...parseMeta(content) };
+      const lastModified = fs.statSync(path.join(SHIP_DIR, d.name)).mtime.toISOString();
+      return { dir: d.name, lastModified, ...parseMeta(content) };
     })
     .filter(Boolean);
 }
