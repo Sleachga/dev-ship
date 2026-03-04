@@ -151,9 +151,15 @@
   }
 
   .status-in-progress {
-    color: var(--accent);
-    border-color: var(--accent-dim);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--blue);
+    border-color: rgba(88, 166, 255, 0.4);
+    background: rgba(88, 166, 255, 0.1);
+  }
+
+  .status-active {
+    color: #d29922;
+    border-color: rgba(210, 153, 34, 0.4);
+    background: rgba(210, 153, 34, 0.1);
   }
 
   .status-complete {
@@ -663,6 +669,121 @@
   }
 
   .empty-state p { margin-top: 8px; font-size: 13px; }
+
+  /* Feature Cards */
+  .feature-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .feature-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feature-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-dim);
+  }
+
+  .feature-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .feature-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .feature-card-bottom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .feature-card-step {
+    font-size: 12px;
+    color: var(--text-dim);
+    flex: 1;
+  }
+
+  .feature-card-ticket {
+    font-size: 11px;
+    color: var(--blue);
+    background: rgba(88, 166, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .feature-card-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  /* Completed Zone */
+  .completed-zone { margin-bottom: 16px; }
+
+  .completed-zone-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border);
+    transition: color 0.15s;
+  }
+
+  .completed-zone-header:hover { color: var(--text); }
+
+  .completed-zone-body { display: none; padding: 12px 0; }
+  .completed-zone-body.open { display: block; }
+
+  .completed-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .completed-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .completed-pill:hover {
+    border-color: var(--accent-dim);
+    color: var(--text);
+    background: var(--bg-hover);
+  }
+
+  .completed-pill-check { color: var(--accent); font-size: 10px; }
 </style>
 </head>
 <body>
@@ -695,28 +816,13 @@
   <div class="overview-view" id="overviewView">
     <div class="toolbar">
       <input type="text" id="featureSearch" class="toolbar-search" placeholder="Search features..." />
-      <select id="featureFilter" class="toolbar-select">
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="complete">Complete</option>
-      </select>
     </div>
-    <table class="overview-table">
-      <thead>
-        <tr>
-          <th>Feature</th>
-          <th>Ticket</th>
-          <th>Step</th>
-          <th>Progress</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="featureTable"></tbody>
-    </table>
+    <div id="activeCards" class="feature-cards"></div>
     <div class="empty-state" id="emptyState" style="display:none">
       <div style="font-size:24px; opacity:0.5">~</div>
       <p>No features yet. Run /dev-ship:sail to start one.</p>
     </div>
+    <div id="completedZone" class="completed-zone" style="display:none"></div>
     <div class="backlog-section" id="backlogSection" style="display:none">
       <div class="backlog-header">
         <h2>Backlog</h2>
@@ -760,6 +866,7 @@
   let backlog = { sections: [] };
   let currentDetail = null;
   let projectName = null;
+  let completedZoneOpen = false;
 
   document.getElementById('backBtn').addEventListener('click', () => navigate('/'));
 
@@ -876,78 +983,140 @@
     };
   }
 
+  // --- Helpers ---
+  function formatStep(step) {
+    if (!step) return '\u2014';
+    const m = step.match(/^phase-(\d+):(\w+)$/);
+    if (m) return 'Phase ' + m[1] + ' \u00b7 ' + m[2].charAt(0).toUpperCase() + m[2].slice(1);
+    return step.charAt(0).toUpperCase() + step.slice(1);
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return null;
+    const diff = Date.now() - date.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 2) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + 'h ago';
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'yesterday';
+    if (days < 30) return days + 'd ago';
+    const months = Math.floor(days / 30);
+    if (months < 12) return months + 'mo ago';
+    return Math.floor(months / 12) + 'y ago';
+  }
+
+  function getStatusClass(status) {
+    if (status === 'in-progress') return 'status-in-progress';
+    if (status === 'complete') return 'status-complete';
+    return 'status-active';
+  }
+
+  function getStatusText(status) {
+    if (status === 'in-progress') return '\u25cf in progress';
+    if (status === 'complete') return '\u2713 complete';
+    return '\u25cf active';
+  }
+
   // --- Overview ---
   function renderOverview() {
-    const tbody = document.getElementById('featureTable');
+    const activeEl = document.getElementById('activeCards');
+    const completedZoneEl = document.getElementById('completedZone');
     const empty = document.getElementById('emptyState');
     const query = (document.getElementById('featureSearch').value || '').toLowerCase();
-    const filter = document.getElementById('featureFilter').value;
 
-    tbody.replaceChildren();
-
-    const filtered = features.filter(f => {
-      if (query && !(f.name || f.dir).toLowerCase().includes(query)
-          && !(f.ticket || '').toLowerCase().includes(query)
-          && !(f.step || '').toLowerCase().includes(query)) return false;
-      if (filter === 'active' && f.status === 'complete') return false;
-      if (filter === 'complete' && f.status !== 'complete') return false;
-      return true;
-    });
+    activeEl.replaceChildren();
+    completedZoneEl.replaceChildren();
 
     if (features.length === 0) {
       empty.style.display = 'block';
+      completedZoneEl.style.display = 'none';
       return;
     }
 
     empty.style.display = 'none';
 
-    if (filtered.length === 0 && query) {
-      tbody.appendChild(el('tr', null, [
-        el('td', { colspan: '5', style: { textAlign: 'center', color: 'var(--text-dim)', padding: '24px' } },
-          ['No features match "' + query + '"']),
-      ]));
-      return;
+    const filtered = !query ? features : features.filter(f =>
+      (f.name || f.dir).toLowerCase().includes(query)
+      || (f.ticket || '').toLowerCase().includes(query)
+      || (f.step || '').toLowerCase().includes(query)
+    );
+
+    const active = filtered.filter(f => f.status !== 'complete');
+    const completed = filtered.filter(f => f.status === 'complete');
+
+    if (active.length > 0) {
+      for (const f of active) activeEl.appendChild(buildFeatureCard(f));
+    } else if (query) {
+      activeEl.appendChild(el('div', {
+        style: { color: 'var(--text-dim)', fontSize: '13px', padding: '12px 0' },
+      }, ['No active features match "' + query + '"']));
     }
 
-    if (filtered.length === 0 && filter !== 'all') {
-      tbody.appendChild(el('tr', null, [
-        el('td', { colspan: '5', style: { textAlign: 'center', color: 'var(--text-dim)', padding: '24px' } },
-          ['No ' + filter + ' features']),
-      ]));
-      return;
+    if (completed.length > 0) {
+      completedZoneEl.style.display = 'block';
+      const toggle = el('span', { className: 'section-toggle' + (completedZoneOpen ? ' open' : '') }, ['\u25b6']);
+      const header = el('div', { className: 'completed-zone-header' }, [toggle, 'Completed (' + completed.length + ')']);
+      const body = el('div', { className: 'completed-zone-body' + (completedZoneOpen ? ' open' : '') });
+      const pills = el('div', { className: 'completed-pills' });
+      for (const f of completed) pills.appendChild(buildCompletedPill(f));
+      body.appendChild(pills);
+      header.addEventListener('click', () => {
+        completedZoneOpen = !completedZoneOpen;
+        toggle.classList.toggle('open', completedZoneOpen);
+        body.classList.toggle('open', completedZoneOpen);
+      });
+      completedZoneEl.appendChild(header);
+      completedZoneEl.appendChild(body);
+    } else {
+      completedZoneEl.style.display = 'none';
     }
+  }
 
-    for (const f of filtered) {
-      const pct = f.phasesTotal ? Math.round((f.phasesComplete / f.phasesTotal) * 100) : 0;
-      const isDone = f.status === 'complete';
+  function buildFeatureCard(f) {
+    const pct = f.phasesTotal ? Math.round((f.phasesComplete / f.phasesTotal) * 100) : 0;
+    const bar = el('div', { className: 'progress-bar', style: { margin: '0' } });
+    const fill = el('div', { className: 'progress-fill progress-fill-active' });
+    fill.style.width = pct + '%';
+    bar.appendChild(fill);
 
-      const row = el('tr', { className: 'row', onclick: () => navigate('/feature/' + encodeURIComponent(f.dir)) }, [
-        el('td', { style: { color: 'var(--text-bright)' } }, [f.name || f.dir]),
-        el('td', { style: { color: 'var(--text-dim)' } }, [f.ticket || 'none']),
-        el('td', null, [f.step || '\u2014']),
-        el('td', null, [
-          (() => {
-            const bar = el('div', { className: 'progress-bar' });
-            const fill = el('div', {
-              className: 'progress-fill ' + (isDone ? 'progress-fill-done' : 'progress-fill-active'),
-            });
-            fill.style.width = pct + '%';
-            bar.appendChild(fill);
-            return bar;
-          })(),
-          el('span', { style: { fontSize: '11px', color: 'var(--text-dim)' } }, [
-            f.phasesTotal ? `${f.phasesComplete}/${f.phasesTotal}` : '0/?',
-          ]),
-        ]),
-        el('td', null, [
-          el('span', {
-            className: 'status-badge ' + (isDone ? 'status-complete' : 'status-in-progress'),
-          }, [isDone ? '\u2713 complete' : '\u25cf active']),
-        ]),
-      ]);
+    const topRow = el('div', { className: 'feature-card-top' }, [
+      el('span', { className: 'feature-card-name' }, [f.name || f.dir]),
+      el('span', { className: 'status-badge ' + getStatusClass(f.status) }, [getStatusText(f.status)]),
+    ]);
 
-      tbody.appendChild(row);
+    const bottomChildren = [
+      el('span', { className: 'feature-card-step' }, [formatStep(f.step)]),
+    ];
+    if (f.ticket && f.ticket !== 'none') {
+      bottomChildren.push(el('span', { className: 'feature-card-ticket' }, [f.ticket]));
     }
+    bottomChildren.push(bar);
+    bottomChildren.push(el('span', { style: { fontSize: '11px', color: 'var(--text-dim)' } }, [
+      f.phasesTotal ? f.phasesComplete + '/' + f.phasesTotal : '0/?',
+    ]));
+    const ago = timeAgo(f.lastModified);
+    if (ago) bottomChildren.push(el('span', { className: 'feature-card-time' }, [ago]));
+
+    const bottomRow = el('div', { className: 'feature-card-bottom' }, bottomChildren);
+
+    return el('div', {
+      className: 'feature-card',
+      onclick: () => navigate('/feature/' + encodeURIComponent(f.dir)),
+    }, [topRow, bottomRow]);
+  }
+
+  function buildCompletedPill(f) {
+    return el('div', {
+      className: 'completed-pill',
+      onclick: () => navigate('/feature/' + encodeURIComponent(f.dir)),
+    }, [
+      el('span', { className: 'completed-pill-check' }, ['\u2713']),
+      f.name || f.dir,
+    ]);
   }
 
   // --- Backlog ---
@@ -1421,7 +1590,6 @@
 
   // --- Init ---
   document.getElementById('featureSearch').addEventListener('input', renderOverview);
-  document.getElementById('featureFilter').addEventListener('change', renderOverview);
   document.getElementById('backlogSearch').addEventListener('input', renderBacklog);
   document.getElementById('backlogSort').addEventListener('change', renderBacklog);
   handleRoute(); // Route on initial page load
