@@ -2,7 +2,7 @@
 name: dev-ship:sail
 description: Sail through features — check status, or continue where you left off
 argument-hint: "[feature-name] [--ticket <ID>]"
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion, Task, WebSearch, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__find, mcp__claude-in-chrome__screenshot, mcp__claude-in-chrome__javascript_tool
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion, Task, WebSearch, mcp__playwright__browser_navigate, mcp__playwright__browser_click, mcp__playwright__browser_snapshot, mcp__playwright__browser_screenshot, mcp__playwright__browser_type, mcp__playwright__browser_wait, mcp__playwright__browser_close, mcp__playwright__browser_resize, mcp__playwright__browser_select_option, mcp__playwright__browser_hover, mcp__playwright__browser_drag, mcp__playwright__browser_press_key, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_tab_new, mcp__playwright__browser_tab_list, mcp__playwright__browser_tab_select, mcp__playwright__browser_tab_close
 ---
 
 # /dev-ship:sail — Feature Shipping Workflow
@@ -50,7 +50,7 @@ When **resuming** a feature (META.md already exists), check every existing `.shi
 | `PLAN.md` | `Overview`, `Research Summary`, `Phases`, `Testing Strategy` | `META.md`, `RESEARCH.md` |
 | `phase-N/CONTEXT.md` | `Decisions`, `Approach` | `../../META.md`, `../../PLAN.md` |
 | `phase-N/SUMMARY.md` | `What was done`, `Files changed`, `Commit` | `../../META.md`, `CONTEXT.md` |
-| `DEMO-NOTES.md` | `Walkthrough` | `META.md`, `TEST-PLAN.md` |
+| `phase-N/DEMO-NOTES.md` | `Approach`, `Walkthrough`, `Results` | `../../META.md`, `../../PLAN.md` |
 | `TEST-PLAN.md` | `Setup`, `Test Cases`, `Edge Cases` | `META.md`, `PLAN.md` |
 | `BACKLOG.md` | `General` (or actual section names) | `[]` |
 
@@ -112,8 +112,8 @@ All progress is tracked in `.ship/{FEATURE}/META.md`. The `step` field records e
 - `plan` — Writing the plan
 - `phase-N:context` — Gathering context for phase N
 - `phase-N:implement` — Implementing phase N (TDD)
+- `phase-N:demo` — Running demo for phase N
 - `phase-N:summarize` — Writing phase N summary
-- `demo` — Browser demo step
 - `test-plan` — Writing manual test plan
 - `complete` — All done
 
@@ -216,8 +216,18 @@ Tell the user: "Research complete — findings written to RESEARCH.md. Next up: 
    - Scope boundaries (what's in, what's out)
    - User preferences for approach
    - Any constraints or requirements not yet captured
-3. Break the work into **2-5 phases**, each independently committable
-4. Write `.ship/{FEATURE}/PLAN.md`:
+3. Break the work into **2-5 implementation phases**, each independently committable
+4. **Ask about demo phases**: Use AskUserQuestion with `multiSelect: true`: "Which phases need a demo walkthrough after implementation?" with one option per implementation phase. Each option label should be the phase name, with a description of what would be demonstrated.
+5. For each phase the user selects for a demo, insert a demo phase immediately after it. Demo phases in PLAN.md use this format:
+   ```
+   ### Phase {N}: Demo — {previous phase name}
+   - **Type**: demo
+   - **Objective**: Demonstrate {what was built}
+   - **Demo scope**: {what to walk through}
+   - **Success criteria**: {what the demo should show working}
+   ```
+   Implementation phases do NOT have a `**Type**` field — only demo phases do. Renumber all phases sequentially (demos get their own numbers).
+6. Write `.ship/{FEATURE}/PLAN.md`:
 
 ```
 ---
@@ -250,17 +260,23 @@ version:
 - **Key files**: {files to create/modify}
 - **Success criteria**: {how we know it's done}
 
-### Phase 2: {name}
+### Phase 2: Demo — {Phase 1 name}  (only if user selected Phase 1 for demo)
+- **Type**: demo
+- **Objective**: Demonstrate {what Phase 1 built}
+- **Demo scope**: {what to walk through}
+- **Success criteria**: {what the demo should show working}
+
+### Phase 3: {name}
 ...
 
 ## Testing Strategy
 {Overall approach to testing this feature}
 ```
 
-5. Present the plan to the user. Use AskUserQuestion: "Does this plan look good? Any changes before I start Phase 1?"
-6. Wait for approval before proceeding.
+7. Present the plan to the user. Use AskUserQuestion: "Does this plan look good? Any changes before I start Phase 1?"
+8. Wait for approval before proceeding.
 
-**Update META.md: step to `phase-1:context`, phases to `0/{total} complete`** (now that we know the total from the plan).
+**Update META.md: step to `phase-1:context`, phases to `0/{total} complete`** (where total includes demo phases).
 
 Tell the user: "Plan approved. Starting Phase 1 next.
 
@@ -268,7 +284,7 @@ Tell the user: "Plan approved. Starting Phase 1 next.
 
 ## Step 4: Phase Loop
 
-For each phase in PLAN.md:
+For each phase in PLAN.md, first check if the phase's plan section contains `**Type**: demo`. If it does, run the **Demo Phase Workflow** (4d) instead of the normal TDD workflow (4a-4c).
 
 ### 4a. Context Gathering
 
@@ -359,53 +375,99 @@ version:
 ```
 
 If there are more phases:
-- **Update META.md: step to `phase-{N+1}:context`, phases to `{N}/{total} complete`.**
+- **Update META.md: step to `phase-{N+1}:context` (or `phase-{N+1}:demo` if next phase has `**Type**: demo`), phases to `{N}/{total} complete`.**
 - Tell the user: "Phase {N} complete! {N}/{total} phases done. Next up: Phase {N+1} — {next phase name}.
 
 > `/clear` recommended. Run `/dev-ship:sail {FEATURE}` to start Phase {N+1} with a fresh context."
-- Wait for acknowledgment, then go back to 4a.
+- Wait for acknowledgment, then continue the loop (go to 4a for implementation phases, or 4d for demo phases).
 
 If all phases are done:
-- **Update META.md: step to `demo`, phases to `{total}/{total} complete`.**
-- Tell the user: "All {total} phases complete! Next up: browser demo (optional).
-
-> `/clear` recommended before the demo. Run `/dev-ship:sail {FEATURE}` to continue."
-
-## Step 5: Browser Demo
-
-**Update META.md step to `demo`.**
-
-1. Ask: "Ready for a browser demo? I'll start the dev server and walk through the feature. Or we can skip to the manual test plan."
-2. If user agrees:
-   - Start the dev server if not running (`npm run dev` or equivalent — check package.json)
-   - Use Chrome automation MCP tools to open the app
-   - Walk through the feature, narrating each step
-   - Take screenshots of key states
-   - Write `.ship/{FEATURE}/DEMO-NOTES.md` with the walkthrough, using this template:
-     ```
-     ---
-     toc:
-       - Walkthrough
-     dependencies:
-       - META.md
-       - TEST-PLAN.md
-     version:
-       created: {current date}
-       feature: {FEATURE}
-     ---
-     # Demo Notes: {FEATURE}
-     ## Walkthrough
-     {narrated steps and screenshots}
-     ```
-3. If user declines, skip to Step 6.
-
-**Update META.md step to `test-plan`.**
-
-Tell the user: "Demo done. Last step: writing the manual test plan.
+- **Update META.md: step to `test-plan`, phases to `{total}/{total} complete`.**
+- Tell the user: "All {total} phases complete! Next up: writing the manual test plan.
 
 > `/clear` recommended. Run `/dev-ship:sail {FEATURE}` to finish up with the test plan."
 
-## Step 6: Manual Test Plan
+### 4d. Demo Phase Workflow
+
+This runs instead of 4a-4c when the phase's plan section contains `**Type**: demo`.
+
+1. **Update META.md step to `phase-{N}:demo`.**
+2. Announce: "**Phase {N}: Demo — {name}** — time to demo what was just built."
+3. Use AskUserQuestion: "How would you like to demo Phase {N-1}'s work?" with options:
+   - "Browser automation" — "I'll start the dev server and use Playwright to walk through + screenshot"
+   - "Manual walkthrough" — "I'll give you a checklist of things to try and verify"
+4. Execute the chosen approach:
+
+   **Browser automation**:
+   - Start the dev server if not running (`npm run dev` or equivalent — check package.json)
+   - Use Playwright MCP tools (`mcp__playwright__*`) to navigate the app, interact with the feature, and take screenshots
+   - Walk through the demo scope defined in the plan, narrating each step
+   - Capture screenshots of key states
+
+   **Manual walkthrough**:
+   - Present numbered steps for the user to try, based on the demo scope in the plan
+   - Ask the user to confirm results after each step or at the end
+
+5. Create `.ship/{FEATURE}/phase-{N}/` directory if it doesn't exist.
+6. Write `.ship/{FEATURE}/phase-{N}/DEMO-NOTES.md`:
+   ```
+   ---
+   toc:
+     - Approach
+     - Walkthrough
+     - Results
+   dependencies:
+     - ../../META.md
+     - ../../PLAN.md
+   version:
+     created: {current date}
+     feature: {FEATURE}
+     phase: {N}
+   ---
+   # Demo Notes: Phase {N} — {name}
+
+   ## Approach
+   {Browser automation | Manual walkthrough}
+
+   ## Walkthrough
+   {Steps taken and observations}
+
+   ## Results
+   {What was verified, any issues found}
+   ```
+7. **Update META.md step to `phase-{N}:summarize`.**
+8. Write `.ship/{FEATURE}/phase-{N}/SUMMARY.md`:
+   ```
+   ---
+   toc:
+     - What was done
+     - Demo results
+   dependencies:
+     - ../../META.md
+     - DEMO-NOTES.md
+   version:
+     created: {current date}
+     feature: {FEATURE}
+     phase: {N}
+   ---
+   # Phase {N} Summary: Demo — {name}
+
+   ## What was done
+   {1-2 sentences about the demo}
+
+   ## Demo results
+   {Key findings from the walkthrough}
+   ```
+
+If there are more phases:
+- **Update META.md: step to `phase-{N+1}:context` (or `phase-{N+1}:demo` if next is also a demo phase), phases to `{completed}/{total} complete`.**
+- Tell the user: "Demo complete! {completed}/{total} phases done. Next up: Phase {N+1} — {next phase name}.
+
+> `/clear` recommended. Run `/dev-ship:sail {FEATURE}` to continue."
+
+If all phases are done: follow the same transition as 4c above (update to `test-plan`).
+
+## Step 5: Manual Test Plan
 
 **Update META.md step to `test-plan`.**
 
@@ -449,8 +511,8 @@ Tell the user: "Feature **{FEATURE}** is shipped! Here's what was created:
 - `PLAN.md` — phase breakdown
 - `phase-*/CONTEXT.md` — decisions per phase
 - `phase-*/SUMMARY.md` — what was built per phase
+- `phase-*/DEMO-NOTES.md` — demo walkthroughs (for demo phases)
 - `TEST-PLAN.md` — manual testing checklist
-{- `DEMO-NOTES.md` — browser demo walkthrough (if demo was done)}
 
 Run through `TEST-PLAN.md` to verify everything works."
 

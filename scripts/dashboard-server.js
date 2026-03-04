@@ -120,6 +120,11 @@ function readFeatureDetail(name) {
         phase.summary = fs.readFileSync(summaryPath, 'utf-8');
       }
 
+      const demoPath = path.join(featureDir, entry.name, 'DEMO-NOTES.md');
+      if (fs.existsSync(demoPath)) {
+        phase.demo = fs.readFileSync(demoPath, 'utf-8');
+      }
+
       detail.phases.push(phase);
     }
   }

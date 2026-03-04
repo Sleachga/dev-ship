@@ -1201,7 +1201,9 @@
 
     container.appendChild(el('h3', null, ['Phase ' + currentPhase + ' \u2014 Current Step']));
 
-    const substeps = ['context', 'implement', 'summarize'];
+    const isDemo = currentSub === 'demo' ||
+      (d.plan && d.plan.match(new RegExp('### Phase ' + currentPhase + ':[^]*?\\*\\*Type\\*\\*:\\s*demo')));
+    const substeps = isDemo ? ['demo', 'summarize'] : ['context', 'implement', 'summarize'];
     const subIdx = substeps.indexOf(currentSub);
     const stepsDiv = el('div', { className: 'substeps' });
 
@@ -1238,6 +1240,23 @@
           ]);
           return entry;
         }), true));
+      }
+    }
+
+    // Demo notes
+    if (d.phases && d.phases.length > 0) {
+      const demos = d.phases
+        .filter(p => p.demo)
+        .map(p => ({ number: p.number, text: p.demo }));
+
+      if (demos.length > 0) {
+        container.appendChild(buildSection('Demo Notes', demos.map(demo => {
+          const entry = el('div', { className: 'decision-entry' }, [
+            el('div', { className: 'decision-phase' }, ['Phase ' + demo.number]),
+            (() => { const d = el('div', { className: 'decision-text' }); d.appendChild(renderMdBlock(demo.text)); return d; })(),
+          ]);
+          return entry;
+        }), false));
       }
     }
 
