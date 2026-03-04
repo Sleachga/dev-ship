@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''mcpServers'', {}\\), indent=2\\)\\)\")",
+      "Bash(curl:*)",
+      "Bash(npx playwright:*)",
+      "Bash(node:*)",
+      "Skill(dev-ship:dev-ship:dashboard)",
+      "Bash(open:*)"
+    ]
+  }
+}
