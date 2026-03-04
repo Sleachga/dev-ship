@@ -14,6 +14,7 @@ A structured, resumable, zero-dependency feature-shipping workflow for [Claude C
 - **Resume anywhere** — All state saved to `.ship/` so you can `/clear` and pick up where you left off
 - **Parallel research** — Multiple agents explore your codebase simultaneously using cheap Haiku models
 - **Project backlog** — Quick-capture backlog items from the CLI or the dashboard, organized by section
+- **Retroactive tracking** — Recap untracked work by analyzing git history and creating dashboard entries retroactively
 - **Live dashboard** — Real-time web UI with dark terminal aesthetic, customizable accent colors
 - **Zero dependencies** — Native Node.js only, nothing to install beyond the plugin
 - **Cross-platform** — Windows, macOS, and Linux support (notifications, file paths)
@@ -40,6 +41,9 @@ In Claude Code:
 /dev-ship:backlog                             # View your backlog interactively
 /dev-ship:backlog fix the login bug           # Quick-add an item
 /dev-ship:backlog fix search --section bugs   # Add to a specific section
+/dev-ship:recap                               # Retroactively track untracked work from git history
+/dev-ship:recap --since "2 weeks ago"         # Recap commits since a specific date
+/dev-ship:recap --range abc1234..def5678      # Recap an explicit commit range
 /dev-ship:dashboard                           # Open the live dashboard in your browser
 /dev-ship:uninstall                           # Clean up project data or fully remove the plugin
 ```
@@ -64,11 +68,26 @@ The dashboard also includes a **backlog panel** with search, sort, collapsible s
 
 You can also open it manually anytime with `/dev-ship:dashboard`.
 
+## Retroactive recap
+
+Already shipped some work before installing dev-ship? Run `/dev-ship:recap` to catch the dashboard up.
+
+It analyzes your git history, groups commits into logical features, and (with your confirmation) creates `.ship/` entries so everything shows up on the dashboard.
+
+```
+/dev-ship:recap                           # Recap last 2 weeks of untracked commits (default)
+/dev-ship:recap --since "1 month ago"     # Look back further
+/dev-ship:recap --range abc1234..def5678  # Recap a specific commit range
+```
+
+Commits already tracked by dev-ship are automatically skipped. Groups are inferred from conventional commit scopes, file path overlap, and temporal proximity — and you can review, rename, or skip each group before anything is written.
+
 ## What's included
 
 | Component | Purpose |
 |-----------|---------|
 | `/dev-ship:sail` command | Sail through features — check status, or continue where you left off |
+| `/dev-ship:recap` command | Retroactively track untracked work by analyzing git history |
 | `/dev-ship:backlog` command | Quick-capture backlog items, organize by section, mark done or drop |
 | `/dev-ship:dashboard` command | Open the live feature dashboard in your browser |
 | `/dev-ship:uninstall` command | Clean up `.ship/` project data or fully remove the plugin |
