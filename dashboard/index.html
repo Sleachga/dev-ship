@@ -1226,13 +1226,14 @@
     const bar = el('div', { className: 'spotlight-bar' }, [barFill]);
 
     const topChildren = [el('span', { className: 'spotlight-name' }, [f.name || f.dir])];
-    if (f.ticket && f.ticket !== 'none') {
-      topChildren.push(el('span', { className: 'spotlight-ticket' }, [f.ticket]));
-    }
 
     const bottomChildren = [
       el('span', { className: 'spotlight-step' }, [formatStep(f.step)]),
-      bar,
+    ];
+    if (f.ticket && f.ticket !== 'none') {
+      bottomChildren.push(el('span', { className: 'spotlight-ticket' }, [f.ticket]));
+    }
+    bottomChildren.push(bar,
       el('span', { style: { fontSize: '11px', color: 'var(--text-dim)', flexShrink: '0' } }, [
         f.phasesTotal ? f.phasesComplete + '/' + f.phasesTotal + ' phases' : '0/? phases',
       ]),
