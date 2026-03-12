@@ -1237,7 +1237,7 @@
       el('span', { style: { fontSize: '11px', color: 'var(--text-dim)', flexShrink: '0' } }, [
         f.phasesTotal ? f.phasesComplete + '/' + f.phasesTotal + ' phases' : '0/? phases',
       ]),
-    ];
+    );
     const ago = timeAgo(f.lastModified);
     if (ago) bottomChildren.push(el('span', { className: 'feature-card-time' }, [ago]));
 
